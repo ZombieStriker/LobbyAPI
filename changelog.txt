@@ -1,0 +1,209 @@
+3.7.42
+	Added chatcolor support to display names
+
+3.7.41
+	Added GithubUpdater
+
+3.7.40
+	Fixed messages. Now commands should show in a order that makes sense.
+
+3.7.39
+	Fixed updater
+
+3.7.38
+	Added ability to change the displayname for icons
+	Added /lobbyapi setDisplayName
+
+3.7.37
+	Hotfix: Fixed removeWorld command
+	Fixed incorrect if statement, which is stopping the /hub command
+
+3.7.36
+	Fixed casting issue when getting relative location
+	Added return message for addJoinCommand if the player did not have all arguments needed
+	Added hideWorld
+	Added showWorld
+
+3.7.35
+	Made it optional to require permissions for /hub
+
+3.7.34
+	Added permissions.
+
+3.7.33
+	--Unimportant. Did not have changelog when exported
+
+3.7.32
+	Code cleanup
+ 	
+ 3.7.31
+ 	Added chatcolor support to world desctipnsions
+ 	Added try/catch statements for features added in 3.7.30. Should fix errors caused from missing dependancy for PluginConstructorAPI
+ 	
+ 3.7.29
+ 	Added PluginConstructorAPI dependancy
+ 	Setting up framework for multiple bed support
+ 	
+ 3.7.28
+ 	Added support for players with beds.
+ 	Fixed NPE when adding default items
+ 	Added location saving onDisable, onDeath, and on changing worlds	
+ 	Added custom world support. No need to rely on Multiverse
+ 	Players cannot be in custom world when removing world.
+ 	Added support for non existent worlds- If the world was removed due to another plugin, LobbyAPI will not attempt to enable it. This should fix some NPES
+ 
+ 3.7.27
+ 	Added /lobbyapi addDefaultItem <world>
+ 	Added /lobbyapi listDefaultItems <world>
+ 	Added /lobbyapi removeDefaultItem <world> <index>
+ 	Fixed usage messages
+ 	
+ 3.7.26
+ 	Added /lobbyapi setCanUsePortals <world> <true/false>
+ 	Tried to passively added MV-Portal support.
+ 	Added /lobby setdisablehealthandhunger <world> <true/false>
+ 	Added /lobby setvoidlooping <world> <true/false>
+ 	Added code to disable MVI or PWI if they are enabled on the server.
+ 
+ 3.7.25
+ 	Fixed weather bug
+ 	Fixed default world gamemode being set to survival on reload
+ 	Fixed world inventories
+ 	
+ 3.7.24 
+    Fixed issue that may occur when looking for updates.
+    Added the ability for some worlds to save the location of the player when they left the world.
+    Added /lobbyapi setLocationSaving <worldname> <true or false>
+    Added ability to link an item to the hub command. To become a 'World Selector'
+    Added /lobbyapi setWorldSelector
+    Added /lobbyapi removeWorldSelector
+ 
+ 3.7.23
+ 	Added support for fractional XYZ coordinates.
+ 	Fixed issue with worlds being registered twice.
+ 	Added /lobbyapi setDefaultWeather
+    Fixed items changing between worlds.
+    Added the ability to have commands that get sent when a player joins a specific world.
+    Added /lobbyapi addJoiningCommmand
+    Added /lobbyapi removeJoiningCommmand
+    Added /lobbyapi listJoiningCommmands
+ 	
+ 3.7.22
+ 	Added customizable gamemodes per world
+ 
+ 3.7.21
+ 	Fixed issue with PlayerChangedWorldEvent.
+ 	
+ 3.7.20
+ 	Fixed world loading from config spawn glitch
+ 	
+ 3.7.19
+	Fixed issues with addWorld Command
+	
+ 3.7.18
+	Fixed issue with locations being null.
+ 
+ 3.7.17	
+   Added /LobbyAPI changeMaterial <World> <Name or Id>
+   
+ 3.7.16
+   Fixed prefix
+   Fixed setMainLobby tabbing
+   Updated updater 
+   
+ 3.7.15
+ 	Fixed enchantment reload bug
+ 	Added titles to changing world
+ 	Added chat messages to changing worlds (1.7 and lower)
+ 	Added chatcolors to /lobbyapi
+ 	Added /lobbyapi setMainLobby
+ 	Added /lobbyapi removeMainLobby
+ 	Added /lobbyapi changeSpawn
+ 	Added Main lobbies. Main lobbies are worlds that new players and killed players will be sent to by default (unless the world the player was in is a sub-world, e.g. nether.)
+	Fixed command tabbing. World names should now be added to the tablist when needed.
+ 
+3.7.14
+   Fixed enchantment reload bug
+
+3.7.13
+	Updated code for the new BukkitDev site	
+	Added changelog
+	Updated plugin for 1.11
+	
+3.7.12
+
+    Fixed config bug. 
+
+3.7.11
+
+    Added bStat
+    Fixed some minor bugs 
+
+3.7.10
+
+    Fixed updater
+    General Bug fixes. 
+
+3.7.09
+
+    Fixed Updater
+    Added License
+    Fixed Minor bugs 
+
+2.7.08
+
+    Added Bungee Support
+    Fixed Enable/Disable bungee Support
+    Fixed issues with saving/loading inventories (added check for if the world is null,) 
+
+2.7.08:
+
+    Remembered to keep up with this changelog
+    Added bungee Support 
+
+2.6.4:
+
+    Added /LobbyAPI addWorld
+    Added /LobbyAPI removeWorld
+    Added /LobbyAPi listWorlds 
+
+2.6.2:
+
+    Added /lobbyAPI worlds to see world data
+    Added checks to save and load items to specific spots. 
+
+2.6
+
+    Fix some bugs
+    Added Ability to set limits to amount of players per world
+    Added Ability to see how may players per would and max players (if max is set)
+    Fixed player list. Players in a world will now be displayed in the lore. 
+
+2.5.1:
+
+    Fixed bungee support
+    Added ability to change World Block to and Item type (Blocks and Items) 
+
+2.5:
+
+    Added Ability to cancel EnderChests for certain worlds.
+    Added LobbyAPI.setNoEnderChests(World, boolean) and .hasNoEnderChest(world) to check if hasNoEnderChests it applied to a world. 
+
+2.4:
+
+    Changed the inventory's name from "Warp" to "LobbyAPI" to not break any other plugins. 
+
+2.3:
+
+    Added BungeeCord Support
+    Fixed some Menu Bugs 
+
+2.2:
+
+    Added support for whiteListing Worlds
+    Added Support for updating WhiteLists for Worlds 
+
+2.1:
+
+    Just released
+

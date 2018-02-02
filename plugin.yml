@@ -1,0 +1,22 @@
+main: me.zombie_striker.lobbyapi.Main
+version: 3.7.42
+name: LobbyAPI
+commands:
+ Lobby:
+    description: Opens the world menu
+    aliases: [hub]
+ LobbyAPI:
+    description: Get access to all lobbyAPI commands
+permissions:
+   lobbyapi.*:
+     description: Gives access to all LobbyAPI features
+     children:
+       lobbyapi.commands: true
+       lobbyapi.hub: true
+       lobbyapi.bypassworldlimits: true
+   lobbyapi.user:
+     description: Gives access that only a user should have, which is to access the hub command
+     children:
+       lobbyapi.hub: true
+author:
+   Zombie_Striker
