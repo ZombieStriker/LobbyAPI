@@ -1,3 +1,9 @@
+3.7.44
+	Added /lobbyapi changeWorldSlot
+
+3.7.43
+	Fixed Github updater
+
 3.7.42
 	Added chatcolor support to display names
 

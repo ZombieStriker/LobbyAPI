@@ -85,7 +85,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 			} else if (args.length > 1) {
 				if (b(args[0], "ChangeSpawn", "addJoiningCommand","setDisplayName",
 						"ListJoiningCommands", "setDescription", "RemoveWorld",
-						"SetMainLobby", "AddDefaultItem", "RemoveDefaultItem",
+						"SetMainLobby", "AddDefaultItem","changeWorldSlot", "RemoveDefaultItem",
 						"ListDefaultItems")) {
 					if (args.length == 2) {
 						bLW(tab, args[1]);
@@ -271,6 +271,29 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					sender.sendMessage(prefix
 							+ " [world] = '~' for the world you are in or the world's name (it is Case Sensitive)");
 				}
+			} else if (args[0].equalsIgnoreCase("changeWorldSlot")) {
+				if (args.length >= 3) {
+					LobbyWorld lw = gLW(sender, args[1]);
+					if (lw == null)
+						return false;
+					int index = 0;
+					try {
+						index = Integer.parseInt(args[2]);
+					} catch (Exception e) {
+						sender.sendMessage(prefix
+								+ " The index must be a number");
+						return true;
+					}
+					lw.setSlot(index);
+					sender.sendMessage(prefix + "The slot for the world has been changed to "+index);
+				}else {
+					sender.sendMessage(prefix + " Usage:" + ChatColor.BOLD
+							+ " /LobbyAPI changeWorldSlot [world] [slot]");
+					sender.sendMessage(prefix
+							+ " [world] = '~' for the world you are in or the world's name (it is Case Sensitive)");
+					sender.sendMessage(prefix
+							+ " [slot] = the new slot for the world");
+				}
 
 			} else if (args[0].equalsIgnoreCase("removeDefaultItem")) {
 				if (args.length >= 3) {
@@ -300,7 +323,6 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					lw.setSpawnItems(items);
 					ConfigHandler.setWorldVariable(lw,
 							ConfigKeys.DefaultItems.s, items);
-
 				} else {
 					sender.sendMessage(prefix + " Usage:" + ChatColor.BOLD
 							+ " /LobbyAPI addDefaultItem [world]");

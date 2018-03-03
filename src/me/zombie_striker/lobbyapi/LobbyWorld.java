@@ -279,6 +279,11 @@ public class LobbyWorld {
 	public int getSlot() {
 		return ID;
 	}
+	
+	public void setSlot(int slot) {
+		this.ID = slot;
+	}
+	
 
 	public int getSlotAmount() {
 		return amount;
