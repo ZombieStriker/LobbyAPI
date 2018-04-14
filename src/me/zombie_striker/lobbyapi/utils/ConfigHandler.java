@@ -26,7 +26,7 @@ public class ConfigHandler {
 				"disablehealthandhunger"), DisableVoid("disablevoid"),isHidden("hidden"), Material(
 				"material"), Weather("weatherstate"), Color("color"), JoiningCommands(
 				"joincommands"), GameMode("gamemode"), SavingLocation(
-				"playerworldsavinglocations"), ShouldBeSavingLocation("shouldsavelocation"),DefaultItems("defaultitems"),CustomAddedWorlds("CustomWorlds"),CustomAddedWorlds_Seed("Seeds");
+				"playerworldsavinglocations"), ShouldBeSavingLocation("shouldsavelocation"),DefaultItems("defaultitems"),CustomAddedWorlds("CustomWorlds"),CustomAddedWorlds_Seed("Seeds"), ENABLE_PER_WORLD_INVENTORIES("Enable_Per_World_Inventories");
 
 		public String s;
 
@@ -69,6 +69,9 @@ public class ConfigHandler {
 
 	public static String getLobbyAPIVariableString(String key) {
 		return config.getString("Settings." + key);
+	}
+	public static boolean getLobbyAPIVariableBoolean(String key) {
+		return config.getBoolean("Settings." + key);
 	}
 
 	public static boolean containsLobbyAPIVariable(String key) {

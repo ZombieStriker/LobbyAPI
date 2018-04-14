@@ -1,3 +1,35 @@
+3.5.53
+	Added ability to disable per-world-inventories
+
+3.5.52
+	Fixed timings. Should prevent item duplication
+
+3.7.51
+	Fixed possible bug where some items can be duplicated.
+	Added support for offhand transfer
+
+3.7.50
+	Added chatcolor support
+	Added ID support
+	Added Data support
+	Fixed error which clicking decor
+
+3.7.49
+	added /lobbyapi addDecor and /lobbyapi removeDecor
+	added decor items! now you can include non-clickable items to the hub menu
+
+3.7.48
+	Changed title for menu
+
+3.7.47
+	Fixed updater time-out error.
+
+3.7.46
+	Fixed changeslot saving
+
+3.7.45
+	Added support for yaw changes
+
 3.7.44
 	Added /lobbyapi changeWorldSlot
 
