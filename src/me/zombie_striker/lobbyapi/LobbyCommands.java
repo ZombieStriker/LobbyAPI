@@ -276,13 +276,13 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					int slot = Integer.parseInt(args[1]);
 					Material m = Material.SPONGE;
 					short data = 0;
-					try{
-						m= Material.matchMaterial(args[2]);
-					}catch(Exception e) {
+					try {
+						m = Material.matchMaterial(args[2]);
+					} catch (Exception e) {
 						String[] vals = args[2].split(":");
-						m=Material.getMaterial(Integer.parseInt(vals[0]));
-						if(vals.length>1) {
-						data = Short.parseShort(vals[1]);
+						m = Material.getMaterial(Integer.parseInt(vals[0]));
+						if (vals.length > 1) {
+							data = Short.parseShort(vals[1]);
 						}
 					}
 					StringBuilder display = new StringBuilder();
@@ -300,7 +300,8 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 							return true;
 						}
 
-					LobbyDecor decor = new LobbyDecor(slot, slot + "", ChatColor.translateAlternateColorCodes('&',display.toString()));
+					LobbyDecor decor = new LobbyDecor(slot, slot + "",
+							ChatColor.translateAlternateColorCodes('&', display.toString()));
 					decor.setMaterial(m);
 					decor.setData(data);
 					this.m.getConfig().set("Decor." + decor.getSaveName() + ".displayname", decor.getDisplayname());
@@ -331,7 +332,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 							d = decor;
 							break;
 						}
-					if(d!=null) {
+					if (d != null) {
 						m.decor.remove(d);
 						return true;
 					}
@@ -548,30 +549,44 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 							l.setYaw(((Player) sender).getLocation().getYaw());
 							l.setPitch(((Player) sender).getLocation().getPitch());
 						}
-						LobbyAPI.registerWorldFromConfig(wo, l, savename, wo.getName(), color, i, GameMode.SURVIVAL);
+						LobbyAPI.registerWorldFromConfig(wo, l, savename, wo.getName(), color, i, GameMode.SURVIVAL,
+								false);
 						String fi = wo.getName();
 						if (m.getConfig().contains("Worlds." + fi)) {
 							sender.sendMessage(prefix
 									+ " The config already has registered this world, even though LobbyAPI has not. This should not happen, but if it did, report this to Zombie_Striker on the bukkitdev page: https://dev.bukkit.org/projects/lobbyapi");
 							return false;
 						}
-						m.getConfig().set("Worlds." + fi + ".name", wo.getName());
-						m.getConfig().set("Worlds." + fi + ".displayname", wo.getName());
-						m.getConfig().set("Worlds." + fi + ".spawnLoc.x", l.getX());
-						m.getConfig().set("Worlds." + fi + ".spawnLoc.y", l.getY());
-						m.getConfig().set("Worlds." + fi + ".spawnLoc.z", l.getZ());
-						m.getConfig().set("Worlds." + fi + ".spawnLoc.yaw", l.getYaw());
-						m.getConfig().set("Worlds." + fi + ".spawnLoc.pitch", l.getPitch());
-						m.getConfig().set("Worlds." + fi + ".spawnLoc.w", l.getWorld().getName());
-						m.getConfig().set("Worlds." + fi + ".weatherstate", WeatherState.NORMAL.name());
-						m.getConfig().set("Worlds." + fi + ".i", i);
-						m.getConfig().set("Worlds." + fi + ".save", savename);
-						m.getConfig().set("Worlds." + fi + ".desc", "");
-						m.getConfig().set("Worlds." + fi + ".gamemode", GameMode.SURVIVAL.name());
-						m.getConfig().set("Worlds." + fi + ".color", color);
-						m.saveConfig();
+						saveWorld(fi, savename, wo, l, color, i, false);
 						sender.sendMessage(prefix + "Added world \"" + wo.getName() + "\" with a slot of " + i
 								+ ": Spawn at " + x + " " + y + " " + z + ".");
+						if (Bukkit.getWorlds().get(0).equals(wo)) {
+							// If the wo is the main world
+							sender.sendMessage(prefix
+									+ "Since this world is the main world, the nether and end world will be registered and linked to this world if they have not been registered already.");
+
+							World nether = Bukkit.getWorld("world_nether");
+							World end = Bukkit.getWorld("world_the_end");
+							if (nether == null) {
+								Bukkit.createWorld(new WorldCreator("world_nether"));
+								nether = Bukkit.getWorld("world_nether");
+							}
+							if (end == null) {
+								Bukkit.createWorld(new WorldCreator("world_the_end"));
+								end = Bukkit.getWorld("world_the_end");
+							}
+							if (LobbyAPI.getLobbyWorld(nether) == null) {
+								LobbyAPI.registerWorldFromConfig(nether, nether.getSpawnLocation(), savename,
+										nether.getName(), color, i, GameMode.SURVIVAL, true);
+								saveWorld(nether.getName(), savename, nether, nether.getSpawnLocation(), color, 51,
+										true);
+							}
+							if (LobbyAPI.getLobbyWorld(end) == null) {
+								LobbyAPI.registerWorldFromConfig(end, end.getSpawnLocation(), savename, end.getName(),
+										color, i, GameMode.SURVIVAL, true);
+								saveWorld(end.getName(), savename, end, end.getSpawnLocation(), color, 50, true);
+							}
+						}
 						m.loadLocalWorlds();
 					}
 				} else {
@@ -690,8 +705,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 				} else {
 					sender.sendMessage(
 							prefix + " Usage: /lobbyAPI addJoiningCommand [World] [The command [can include spaces]]");
-					sender.sendMessage(
-							prefix + " Use %player% to get the player's name.");
+					sender.sendMessage(prefix + " Use %player% to get the player's name.");
 				}
 			} else if (args[0].equalsIgnoreCase("removeJoiningCommand")) {
 				if (args.length >= 3) {
@@ -1094,7 +1108,6 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 				m.inventory = m.getServer().createInventory(null, m.inventorySize,
 						ChatColor.GOLD + "LobbyAPI " + ChatColor.WHITE + "- World selector");
 
-
 				for (LobbyWorld wo : m.worlds) {
 					if (wo != null) {
 						if (wo.isHidden())
@@ -1138,9 +1151,9 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 				}
 				for (LobbyDecor d : m.decor) {
 					Material mk = d.getMaterial();
-					if(mk==null ||mk==Material.AIR)
-						mk=Material.BARRIER;
-					
+					if (mk == null || mk == Material.AIR)
+						mk = Material.BARRIER;
+
 					ItemStack material = new ItemStack(mk);
 					material.setAmount(d.getAmount());
 					material.setDurability(d.getData());
@@ -1209,6 +1222,25 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 		usages.put("listDefaultItems", "Adds the item in your hand to the list of default items.");
 		usages.put("addDecor", "Adds a decor item to the hub menu");
 		usages.put("removeDecor", "Removes a decor item.");
+	}
+
+	public void saveWorld(String fi, String savename, World wo, Location l, int color, int i, boolean hidden) {
+		m.getConfig().set("Worlds." + wo.getName() + ".name", wo.getName());
+		m.getConfig().set("Worlds." + wo.getName() + ".displayname", wo.getName());
+		m.getConfig().set("Worlds." + wo.getName() + ".spawnLoc.x", l.getX());
+		m.getConfig().set("Worlds." + wo.getName() + ".spawnLoc.y", l.getY());
+		m.getConfig().set("Worlds." + wo.getName() + ".spawnLoc.z", l.getZ());
+		m.getConfig().set("Worlds." + wo.getName() + ".spawnLoc.yaw", l.getYaw());
+		m.getConfig().set("Worlds." + wo.getName() + ".spawnLoc.pitch", l.getPitch());
+		m.getConfig().set("Worlds." + wo.getName() + ".spawnLoc.w", l.getWorld().getName());
+		m.getConfig().set("Worlds." + wo.getName() + ".weatherstate", WeatherState.NORMAL.name());
+		m.getConfig().set("Worlds." + wo.getName() + ".i", i);
+		m.getConfig().set("Worlds." + wo.getName() + ".save", savename);
+		m.getConfig().set("Worlds." + wo.getName() + ".desc", "");
+		m.getConfig().set("Worlds." + wo.getName() + ".gamemode", GameMode.SURVIVAL.name());
+		m.getConfig().set("Worlds." + wo.getName() + ".color", color);
+		m.getConfig().set("Worlds." + wo.getName() + "." + ConfigKeys.isHidden.s, hidden);
+		m.saveConfig();
 	}
 
 }

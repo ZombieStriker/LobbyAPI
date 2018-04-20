@@ -1,7 +1,16 @@
-3.5.53
+3.7.56
+	Added support for nether ports for the main overworld
+	Fixed problem where some worlds would cancel nether portals
+	Fixed issue where, one some occasions, the config file would reset itself
+	Moved all player files to their own YML files so the main file will never get corrupted by a player
+
+3.7.54
+	Fixed setting
+
+3.7.53
 	Added ability to disable per-world-inventories
 
-3.5.52
+3.7.52
 	Fixed timings. Should prevent item duplication
 
 3.7.51

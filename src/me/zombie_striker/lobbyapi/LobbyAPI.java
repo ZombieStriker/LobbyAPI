@@ -364,7 +364,6 @@ public class LobbyAPI {
 		setWorldMaterial(world, worldMaterial);
 		return lw;
 	}
-
 	/**
 	 * USED ONLY IF LOADING WORLDS FROM LOBBYAPI CONFIG
 	 * 
@@ -379,11 +378,13 @@ public class LobbyAPI {
 	@Deprecated
 	public static LobbyWorld registerWorldFromConfig(World world, Location spawn,
 			String saveLetter, String worldDescription, Integer woolColor,
-			int menuSlot, GameMode gamemode) {
+			int menuSlot, GameMode gamemode,boolean hidden) {
 		LobbyWorld lw = new LobbyWorld(true, world.getName(), menuSlot, 1,
 				Short.parseShort(woolColor + ""), spawn, saveLetter, gamemode);
 		addLobbyWorld(lw);
 		addWorldDescriptionLine(world, worldDescription);
+		if(hidden)
+			hideWorld(world, true);
 		return lw;
 	}
 
@@ -466,6 +467,7 @@ public class LobbyAPI {
 	 * @param name
 	 * @return
 	 */
+	@SuppressWarnings("unlikely-arg-type")
 	public static boolean removeBungeeServer(String name) {
 		return ml.getBWorlds().remove(name);
 

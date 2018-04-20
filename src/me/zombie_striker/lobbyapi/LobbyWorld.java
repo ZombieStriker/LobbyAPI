@@ -206,6 +206,8 @@ public class LobbyWorld {
 		this.spawn = spawn;
 		this.saveName = saveName;
 		this.gamemode = gm;
+		
+		this.canUsePortal = ((mainWorld!=null&&Bukkit.getWorlds().get(0).equals(mainWorld))||worldname.equals("world_nether"));
 	}
 	
 	public enum WeatherState{

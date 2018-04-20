@@ -8,7 +8,7 @@ public class LobbyDecor {
 	private int ID;
 
 	private int amount=1;
-	private short color;
+	//private short color;
 	private Material material = Material.WOOL;
 	private short data = 0;
 

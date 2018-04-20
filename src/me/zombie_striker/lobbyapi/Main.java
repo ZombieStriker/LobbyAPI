@@ -18,6 +18,7 @@ package me.zombie_striker.lobbyapi;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -29,6 +30,7 @@ import me.zombie_striker.pluginconstructor.PluginConstructorAPI;
 import me.zombie_striker.lobbyapi.utils.ConfigHandler.ConfigKeys;
 
 import org.bukkit.*;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.*;
 import org.bukkit.event.*;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -117,8 +119,8 @@ public class Main extends JavaPlugin implements Listener {
 
 		if (!ConfigHandler.containsLobbyAPIVariable(ConfigKeys.ENABLE_PER_WORLD_INVENTORIES.s)) {
 			ConfigHandler.setLobbyAPIVariable(ConfigKeys.ENABLE_PER_WORLD_INVENTORIES.s, true);
-			enablePWI = ConfigHandler.getLobbyAPIVariableBoolean(ConfigKeys.ENABLE_PER_WORLD_INVENTORIES.s);
 		}
+		enablePWI = ConfigHandler.getLobbyAPIVariableBoolean(ConfigKeys.ENABLE_PER_WORLD_INVENTORIES.s);
 
 		if (Bukkit.getPluginManager().getPlugin("Multiverse-Inventories") != null) {
 			Bukkit.getPluginManager().disablePlugin(Bukkit.getPluginManager().getPlugin("Multiverse-Inventories"));
@@ -188,8 +190,9 @@ public class Main extends JavaPlugin implements Listener {
 		// final Updater updater = new Updater(this, 91206, true);
 		GithubUpdater.autoUpdate(this, "ZombieStriker", "LobbyAPI", "LobbyAPI");
 
+		@SuppressWarnings("unused")
 		Metrics met = new Metrics(this);
-		met.addCustomChart(new Metrics.SimplePie("worlds-loaded") {
+		/*met.addCustomChart(new Metrics.SimplePie("worlds-loaded") {
 			@Override
 			public String getValue() {
 				return String.valueOf(worlds.size());
@@ -206,7 +209,7 @@ public class Main extends JavaPlugin implements Listener {
 			public String getValue() {
 				return String.valueOf(getConfig().getBoolean("auto-update"));
 			}
-		});
+		});*/
 		if (!getConfig().contains("Version")
 				|| !getConfig().getString("Version").equals(this.getDescription().getVersion())) {
 			new UpdateAnouncer(this);
@@ -427,7 +430,7 @@ public class Main extends JavaPlugin implements Listener {
 							 * event.getWhoClicked().sendMessage("This world has no name :" + wo); continue;
 							 * }
 							 */
-							if (wo.getSlot() == event.getSlot()) {
+							if (wo.getSlot() == event.getSlot() && !wo.isHidden()) {
 								// if
 								// (event.getCurrentItem().getItemMeta().getDisplayName().equals(wo.getDisplayName()))
 								// {
@@ -555,23 +558,28 @@ public class Main extends JavaPlugin implements Listener {
 			return;
 		}
 		String s = LobbyAPI.getLobbyWorld(w).getSaveName();
+		File tempHolder = new File(getDataFolder() + File.separator + "playerfiles", p.getUniqueId().toString()+".yml");
+		FileConfiguration config = getConfig();
+		if (tempHolder.exists())
+			config = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(tempHolder);
+
 		for (int kl = 0; kl < 36; kl++)
-			if ((ItemStack) getConfig().get(p.getName() + "." + s + ".i." + kl) != null)
-				p.getInventory().setItem(kl, (ItemStack) getConfig().get(p.getName() + "." + s + ".i." + kl));
-		p.getInventory().setBoots((ItemStack) getConfig().get(p.getName() + "." + s + ".a." + 1));
-		p.getInventory().setLeggings((ItemStack) getConfig().get(p.getName() + "." + s + ".a." + 2));
-		p.getInventory().setChestplate((ItemStack) getConfig().get(p.getName() + "." + s + ".a." + 3));
-		p.getInventory().setHelmet((ItemStack) getConfig().get(p.getName() + "." + s + ".a." + 4));
+			if ((ItemStack) config.get(p.getName() + "." + s + ".i." + kl) != null)
+				p.getInventory().setItem(kl, (ItemStack) config.get(p.getName() + "." + s + ".i." + kl));
+		p.getInventory().setBoots((ItemStack) config.get(p.getName() + "." + s + ".a." + 1));
+		p.getInventory().setLeggings((ItemStack) config.get(p.getName() + "." + s + ".a." + 2));
+		p.getInventory().setChestplate((ItemStack) config.get(p.getName() + "." + s + ".a." + 3));
+		p.getInventory().setHelmet((ItemStack) config.get(p.getName() + "." + s + ".a." + 4));
 
 		try {
-			p.getInventory().setItemInOffHand(getConfig().getItemStack(p.getName() + "." + s + ".i.offhand"));
+			p.getInventory().setItemInOffHand(config.getItemStack(p.getName() + "." + s + ".i.offhand"));
 		} catch (Error | Exception e2) {
 		}
 
-		if (getConfig().get(p.getName() + "." + s + ".xpl") != null)
-			p.setLevel((int) getConfig().get(p.getName() + "." + s + ".xpl"));
-		if (getConfig().get(p.getName() + "." + s + ".hunger") != null)
-			p.setFoodLevel((int) getConfig().get(p.getName() + "." + s + ".hunger"));
+		if (config.get(p.getName() + "." + s + ".xpl") != null)
+			p.setLevel((int) config.get(p.getName() + "." + s + ".xpl"));
+		if (config.get(p.getName() + "." + s + ".hunger") != null)
+			p.setFoodLevel((int) config.get(p.getName() + "." + s + ".hunger"));
 	}
 
 	private void saveInventory(Player p, World w) {
@@ -586,41 +594,56 @@ public class Main extends JavaPlugin implements Listener {
 			return;
 		}
 		String world2 = LobbyAPI.getLobbyWorld(w.getName()).getSaveName();
-		getConfig().set(p.getName() + "." + world2 + ".xp", p.getExp());
-		getConfig().set(p.getName() + "." + world2 + ".xpl", p.getLevel());
-		getConfig().set(p.getName() + "." + world2 + ".health", p.getHealth());
-		getConfig().set(p.getName() + "." + world2 + ".hunger", p.getFoodLevel());
+		File tempHolder = new File(getDataFolder() + File.separator + "playerfiles", p.getUniqueId().toString()+".yml");
+		if (!tempHolder.getParentFile().exists())
+			tempHolder.getParentFile().mkdirs();
+		if (!tempHolder.exists())
+			try {
+				tempHolder.createNewFile();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+		FileConfiguration config = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(tempHolder);
+		config.set(p.getName() + "." + world2 + ".xp", p.getExp());
+		config.set(p.getName() + "." + world2 + ".xpl", p.getLevel());
+		config.set(p.getName() + "." + world2 + ".health", p.getHealth());
+		config.set(p.getName() + "." + world2 + ".hunger", p.getFoodLevel());
 		ItemStack[] is = p.getInventory().getContents();
-		getConfig().set(p.getName() + "." + world2 + ".i", null);
+		config.set(p.getName() + "." + world2 + ".i", null);
 		for (int itemIndex = 0; itemIndex < 36; itemIndex++)
-			getConfig().set(p.getName() + "." + world2 + ".i." + itemIndex, is[itemIndex]);
+			config.set(p.getName() + "." + world2 + ".i." + itemIndex, is[itemIndex]);
 
 		try {
-			getConfig().set(p.getName() + "." + world2 + ".i.offhand", p.getInventory().getItemInOffHand());
+			config.set(p.getName() + "." + world2 + ".i.offhand", p.getInventory().getItemInOffHand());
 		} catch (Error | Exception e2) {
 		}
 
-		getConfig().set(p.getName() + "." + world2 + ".a." + 1, p.getInventory().getBoots());
-		getConfig().set(p.getName() + "." + world2 + ".a." + 2, p.getInventory().getLeggings());
-		getConfig().set(p.getName() + "." + world2 + ".a." + 3, p.getInventory().getChestplate());
-		getConfig().set(p.getName() + "." + world2 + ".a." + 4, p.getInventory().getHelmet());
-		saveConfig();
+		config.set(p.getName() + "." + world2 + ".a." + 1, p.getInventory().getBoots());
+		config.set(p.getName() + "." + world2 + ".a." + 2, p.getInventory().getLeggings());
+		config.set(p.getName() + "." + world2 + ".a." + 3, p.getInventory().getChestplate());
+		config.set(p.getName() + "." + world2 + ".a." + 4, p.getInventory().getHelmet());
+		try {
+			config.save(tempHolder);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void loadDecor() {
-		for (String name : getConfig().getConfigurationSection("Decor").getKeys(false)) {
-			String displayname = getConfig().getString("Decor." + name + ".displayname");
-			int slot = getConfig().getInt("Decor." + name + ".slot");
-			List<String> lore = getConfig().getStringList("Decor." + name + ".lore");
-			Material material = Material.matchMaterial(getConfig().getString("Decor." + name + ".material"));
-			int data = getConfig().getInt("Decor." + name + ".durib");
+		if (getConfig().contains("Decor"))
+			for (String name : getConfig().getConfigurationSection("Decor").getKeys(false)) {
+				String displayname = getConfig().getString("Decor." + name + ".displayname");
+				int slot = getConfig().getInt("Decor." + name + ".slot");
+				List<String> lore = getConfig().getStringList("Decor." + name + ".lore");
+				Material material = Material.matchMaterial(getConfig().getString("Decor." + name + ".material"));
+				int data = getConfig().getInt("Decor." + name + ".durib");
 
-			LobbyDecor decor = new LobbyDecor(slot, name, displayname);
-			decor.setMaterial(material);
-			decor.setData(Short.parseShort("" + data));
-			decor.setLore(lore);
-			this.decor.add(decor);
-		}
+				LobbyDecor decor = new LobbyDecor(slot, name, displayname);
+				decor.setMaterial(material);
+				decor.setData(Short.parseShort("" + data));
+				decor.setLore(lore);
+				this.decor.add(decor);
+			}
 	}
 
 	public void loadLocalWorlds() {
@@ -694,7 +717,7 @@ public class Main extends JavaPlugin implements Listener {
 						if (LobbyAPI.getLobbyWorld(s) != null)
 							LobbyAPI.unregisterWorld(getServer().getWorld(s));
 
-						LobbyWorld lw = LobbyAPI.registerWorldFromConfig(w, l, save, desc, color, i, GameMode.SURVIVAL);
+						LobbyWorld lw = LobbyAPI.registerWorldFromConfig(w, l, save, desc, color, i, GameMode.SURVIVAL,false);
 						for (String jC : getConfig().getStringList("Worlds." + lw.getSaveName() + ".joincommands"))
 							lw.addCommand(jC);
 
