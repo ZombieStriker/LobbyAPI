@@ -16,7 +16,6 @@
 package me.zombie_striker.lobbyapi;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -26,6 +25,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
 import org.bukkit.entity.Player;
@@ -64,14 +64,12 @@ public class LobbyWorld {
 
 	private boolean isPrivate;
 	private Set<UUID> allowedPlayersUUID = new HashSet<UUID>();
-	private Set<String> allowedPlayersString = new HashSet<String>();
+	//private Set<String> allowedPlayersString = new HashSet<String>();
 	
 	
 	private List<String> commandsIssed = new ArrayList<>();
 	
-	private boolean shouldSavePlayerLocation = false;
-	private HashMap<UUID,Location> savedPlayerLocations = new HashMap<>();
-	
+	private boolean shouldSavePlayerLocation = false;	
 
 	private List<ItemStack> worldItems;
 	private GameMode gamemode;
@@ -112,35 +110,7 @@ public class LobbyWorld {
 	public boolean shouldWorldShouldSavePlayerLocation(){
 		return this.shouldSavePlayerLocation;
 	}
-	/**
-	 * Returns the last saved locations of all players
-	 * @param Player
-	 * @return the last locations of all players
-	 */
-	public HashMap<UUID, Location> getLastLocation(){
-		return savedPlayerLocations;
-	}
 	
-	public void setLastLocation(HashMap<UUID, Location> h){
-		savedPlayerLocations = h;
-	}
-	/**
-	 * Setst he last location for a player
-	 * @param Player
-	 */
-	public void setLastLocation(Player p, Location l){
-		savedPlayerLocations.put(p.getUniqueId(), l);
-	}
-	/**
-	 * Returns the last saved location of the player. Returns the spawn if the world is not set to save the player's location
-	 * @param Player
-	 * @return the last location of the player, or the spawn.
-	 */
-	public Location getPlayersLastLocation(Player p){
-		if(!shouldSavePlayerLocation)
-			return spawn;
-		return savedPlayerLocations.get(p.getUniqueId());
-	}
 	/**
 	 * Returns if a world has food and health disabled. Useful for worlds where you don't want players to die.
 	 * @return
@@ -363,22 +333,28 @@ public class LobbyWorld {
 		return new HashSet<Player>(this.getMainWorld().getPlayers());
 	}
 
-	@SuppressWarnings("deprecation")
 	public Set<Player> getWhitelistedPlayers() {
 		if (isPrivate()) {
 			Set<Player> allowed = new HashSet<Player>();
 			for (UUID uuid : allowedPlayersUUID) {
 				allowed.add((Player) Bukkit.getOfflinePlayer(uuid));
 			}
-			for (String s : allowedPlayersString) {
+			/*for (String s : allowedPlayersString) {
 				if (!allowed.contains(Bukkit.getOfflinePlayer(s)))
 					allowed.add((Player) Bukkit.getOfflinePlayer(s));
-			}
+			}*/
 			return allowed;
 		}
 		return null;
 	}
 
+
+	public Set<UUID> getWhitelistedPlayersUUID() {
+		if (isPrivate()) {
+			return allowedPlayersUUID;
+		}
+		return null;
+	}
 	public List<ItemStack> getSpawnItems() {
 		return worldItems;
 	}
@@ -459,18 +435,28 @@ public class LobbyWorld {
 		isPrivate = b;
 	}
 
-	public void addWhitelistedPlayer(Player p) {
+	public void addWhitelistedPlayer(OfflinePlayer p) {
 		if (p != null) {
 			allowedPlayersUUID.add(p.getUniqueId());
-			allowedPlayersString.add(p.getName());
 		}
 	}
 
-	public void removeWhitelistedPlayer(Player p) {
+	public void removeWhitelistedPlayer(OfflinePlayer p) {
 		if (p != null) {
 			allowedPlayersUUID.remove(p.getUniqueId());
-			allowedPlayersString.remove(p.getName());
 		}
+	}
+	public void initWhitelist(List<String> uuids) {
+		for(String u : uuids) {
+			allowedPlayersUUID.add(UUID.fromString(u));
+		}
+	}
+	public List<String> whitelistToString(){
+		List<String> list = new ArrayList<String>();
+		for(UUID uuid : allowedPlayersUUID) {
+			list.add(uuid.toString());
+		}
+		return list;
 	}
 
 	public void setSpawnItems(List<ItemStack> i) {
