@@ -1,3 +1,32 @@
+3.7.62
+	Fixed item duplication
+
+3.7.61
+	Fixed worldsnames for chaning commands
+	Fixed maxworld to actually require the maxworld to be set to true, instead of just relying on the private boolean.
+	Added more whitelist features!
+	Added /lobbyapi toggleWhitelists
+	Added /lobbyapi listWhitelist
+	Added /lobbyapi addToWhitelist
+	Added /lobbyapi removeFromWhitelist
+
+3.7.60C
+	Fixed enderchests so they can be broken
+	Odd. The file was rejected,
+
+3.7.60
+	Saved EnderChests per World
+
+3.7.59
+	Fixed inventory size.
+
+3.7.58
+	Moved Location saving to player's files.
+	Removed unused commands	
+
+3.7.57
+	Added fix for save-location breaking if the contents are null.
+
 3.7.56
 	Added support for nether ports for the main overworld
 	Fixed problem where some worlds would cancel nether portals

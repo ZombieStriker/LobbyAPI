@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import me.zombie_striker.lobbyapi.LobbyWorld.WeatherState;
 import me.zombie_striker.lobbyapi.utils.ConfigHandler;
@@ -355,7 +356,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					}
 					lw.setSlot(index);
 
-					m.getConfig().set("Worlds." + lw.getSaveName() + ".i", index);
+					m.getConfig().set("Worlds." + lw.getWorldName() + ".i", index);
 					m.saveConfig();
 					sender.sendMessage(prefix + "The slot for the world has been changed to " + index);
 				} else {
@@ -365,6 +366,121 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 							+ " [world] = '~' for the world you are in or the world's name (it is Case Sensitive)");
 					sender.sendMessage(prefix + " [slot] = the new slot for the world");
 				}
+
+			} else if (args[0].equalsIgnoreCase("toggleWhitelist")) {
+				if (args.length >= 3) {
+					LobbyWorld lw = gLW(sender, args[1]);
+					if (lw == null)
+						return false;
+					boolean isPrivate = Boolean.parseBoolean(args[2]);
+					lw.setIsPrivate(isPrivate);
+
+					m.getConfig().set("Worlds." + lw.getWorldName() + ".isprivate", isPrivate);
+					m.saveConfig();
+					sender.sendMessage(prefix + "The world " + lw.getWorldName() + " is now "
+							+ (isPrivate ? "private" : "public"));
+				} else {
+					sender.sendMessage(
+							prefix + " Usage:" + ChatColor.BOLD + " /LobbyAPI toggleWhitelist [world] [true/false]");
+					sender.sendMessage(prefix
+							+ " [world] = '~' for the world you are in or the world's name (it is Case Sensitive)");
+					sender.sendMessage(prefix + " [true/false] whether the world is private");
+				}
+
+			} else if (args[0].equalsIgnoreCase("listWhitelist")) {
+				if (args.length >= 2) {
+					LobbyWorld lw = gLW(sender, args[1]);
+					if (lw == null)
+						return false;
+					sender.sendMessage(prefix + " All players that are allowed for this world");
+					boolean isMaxed = lw.getWhitelistedPlayersUUID().size() > 18;
+					if (isMaxed) {
+						StringBuilder names = new StringBuilder();
+						for (UUID uuid : lw.getWhitelistedPlayersUUID()) {
+							names.append(Bukkit.getOfflinePlayer(uuid).getName()+", ");
+							if(names.length() > 320) {
+								names.append("....(and more)");
+								break;
+							}
+						}
+						sender.sendMessage(names.toString());
+					} else {
+						for (UUID uuid : lw.getWhitelistedPlayersUUID()) {
+							sender.sendMessage("-"+Bukkit.getOfflinePlayer(uuid).getName());
+						}
+					}
+				} else {
+					sender.sendMessage(prefix + " Usage:" + ChatColor.BOLD + " /LobbyAPI listWhitelist [world]");
+					sender.sendMessage(prefix
+							+ " [world] = '~' for the world you are in or the world's name (it is Case Sensitive)");
+				}
+				
+
+			} else if (args[0].equalsIgnoreCase("addToWhitelist")) {
+				if (args.length >= 2) {
+					LobbyWorld lw = gLW(sender, args[1]);
+					if (lw == null)
+						return false;
+					String name = null;
+					if(args.length>=3) {
+						name = args[2];
+					if(name.equalsIgnoreCase("~"))
+						name = sender.getName();
+					}else {
+						name=sender.getName();
+					}
+					OfflinePlayer player = Bukkit.getOfflinePlayer(name);
+					if(!player.hasPlayedBefore()) {
+						sender.sendMessage(prefix+" The player must have joined before to add them to the whitelist.");
+						return true;
+					}else {
+						lw.addWhitelistedPlayer(player);
+						m.getConfig().set("Worlds." + lw.getWorldName() + ".whitelistedUUIDS", lw.whitelistToString());
+						m.saveConfig();
+						sender.sendMessage(prefix+"Added player "+name+" to whitelist");
+					}
+				} else {
+					sender.sendMessage(prefix + " Usage:" + ChatColor.BOLD + " /LobbyAPI addToWhitelist [world] [player]");
+					sender.sendMessage(prefix
+							+ " [world] = '~' for the world you are in or the world's name (it is Case Sensitive)");
+					sender.sendMessage(prefix
+							+ " [player] = The player that will be added. '~' for yourself");
+				}
+			} else if (args[0].equalsIgnoreCase("removeFromWhitelist")) {
+				if (args.length >= 2) {
+					LobbyWorld lw = gLW(sender, args[1]);
+					if (lw == null)
+						return false;
+					String name = null;
+					if(args.length>=3) {
+						name = args[2];
+					if(name.equalsIgnoreCase("~"))
+						name = sender.getName();
+					}else {
+						name=sender.getName();
+					}
+					OfflinePlayer player = Bukkit.getOfflinePlayer(name);
+					if(!player.hasPlayedBefore()) {
+						sender.sendMessage(prefix+" The player must have joined before to remove them from the whitelist.");
+						return true;
+					}else {
+						lw.removeWhitelistedPlayer(player);
+						m.getConfig().set("Worlds." + lw.getWorldName() + ".whitelistedUUIDS", lw.whitelistToString());
+						m.saveConfig();
+						sender.sendMessage(prefix+"Removed player "+name+" from whitelist");
+					}
+				} else {
+					sender.sendMessage(prefix + " Usage:" + ChatColor.BOLD + " /LobbyAPI removefromwhitelist [world] [player]");
+					sender.sendMessage(prefix
+							+ " [world] = '~' for the world you are in or the world's name (it is Case Sensitive)");
+					sender.sendMessage(prefix
+							+ " [player] = The player that will be removed. '~' for yourself");
+				}
+				
+				
+				
+				
+				
 
 			} else if (args[0].equalsIgnoreCase("removeDefaultItem")) {
 				if (args.length >= 3) {
@@ -421,16 +537,16 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					if (lw == null)
 						return false;
 					if (LobbyWorld.getMainLobby() != null) {
-						if (m.getConfig().getString("Worlds." + LobbyWorld.getMainLobby().getSaveName() + ".name")
+						if (m.getConfig().getString("Worlds." + LobbyWorld.getMainLobby().getWorldName() + ".name")
 								.equalsIgnoreCase(LobbyWorld.getMainLobby().getWorldName())) {
-							m.getConfig().set("Worlds." + LobbyWorld.getMainLobby().getSaveName() + ".isMainLobby",
+							m.getConfig().set("Worlds." + LobbyWorld.getMainLobby().getWorldName() + ".isMainLobby",
 									false);
 							m.saveConfig();
 						}
 					}
-					if (m.getConfig().contains("Worlds." + lw.getSaveName() + ".name") && m.getConfig()
-							.getString("Worlds." + lw.getSaveName() + ".name").equalsIgnoreCase(lw.getWorldName())) {
-						m.getConfig().set("Worlds." + lw.getSaveName() + ".isMainLobby", true);
+					if (m.getConfig().contains("Worlds." + lw.getWorldName() + ".name") && m.getConfig()
+							.getString("Worlds." + lw.getWorldName() + ".name").equalsIgnoreCase(lw.getWorldName())) {
+						m.getConfig().set("Worlds." + lw.getWorldName() + ".isMainLobby", true);
 						m.saveConfig();
 					}
 					lw.setAsMainLobby();
@@ -447,9 +563,9 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 						sender.sendMessage(prefix + " There is no main lobby!");
 						return true;
 					}
-					if (m.getConfig().getString("Worlds." + LobbyWorld.getMainLobby().getSaveName() + ".name")
+					if (m.getConfig().getString("Worlds." + LobbyWorld.getMainLobby().getWorldName() + ".name")
 							.equalsIgnoreCase(lw.getWorldName())) {
-						m.getConfig().set("Worlds." + LobbyWorld.getMainLobby().getSaveName() + ".isMainLobby", false);
+						m.getConfig().set("Worlds." + LobbyWorld.getMainLobby().getWorldName() + ".isMainLobby", false);
 						m.saveConfig();
 						LobbyWorld.removeMainLobby();
 					}
@@ -470,7 +586,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					List<String> g = new ArrayList<String>();
 					g.add(ChatColor.translateAlternateColorCodes('&', sb.toString()));
 					lw.setDescription(g);
-					m.getConfig().set("Worlds." + lw.getSaveName() + ".desc", g);
+					m.getConfig().set("Worlds." + lw.getWorldName() + ".desc", g);
 					m.saveConfig();
 					sender.sendMessage(prefix + "Changed world description for world \"" + lw.getWorldName() + "\" to "
 							+ sb.toString() + ".");
@@ -651,8 +767,8 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 
 					lw.setMaterial(change);
 					lw.setColor((short) 0);
-					m.getConfig().set("Worlds." + lw.getSaveName() + ".material", change.toString());
-					m.getConfig().set("Worlds." + lw.getSaveName() + ".color", 0);
+					m.getConfig().set("Worlds." + lw.getWorldName() + ".material", change.toString());
+					m.getConfig().set("Worlds." + lw.getWorldName() + ".color", 0);
 					m.saveConfig();
 					sender.sendMessage(prefix + "Changed material for \"" + lw.getWorldName() + "\" to "
 							+ change.toString() + ".");
@@ -679,7 +795,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					}
 					lw.setDisplayName(ChatColor.translateAlternateColorCodes('&', sb.toString()));
 					sender.sendMessage(prefix + " Changing the worlds displayname to \"" + sb.toString() + "\"");
-					m.getConfig().set("Worlds." + lw.getSaveName() + ".displayname", lw.getDisplayName());
+					m.getConfig().set("Worlds." + lw.getWorldName() + ".displayname", lw.getDisplayName());
 					m.saveConfig();
 				} else {
 					sender.sendMessage(prefix + " Usage: /lobbyAPI setDisplayName [World] [The displayname]");
@@ -700,7 +816,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					lw.addCommand(sb.toString());
 					sender.sendMessage(prefix + " Adding command " + (lw.getCommandsOnJoin().size() - 1) + " ("
 							+ sb.toString() + ")");
-					m.getConfig().set("Worlds." + lw.getSaveName() + ".joincommands", lw.getCommandsOnJoin());
+					m.getConfig().set("Worlds." + lw.getWorldName() + ".joincommands", lw.getCommandsOnJoin());
 					m.saveConfig();
 				} else {
 					sender.sendMessage(
@@ -722,7 +838,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					String command = lw.getCommandsOnJoin().get(i);
 					lw.getCommandsOnJoin().remove(i);
 					sender.sendMessage(prefix + " Removing command " + i + " (" + command + ")");
-					m.getConfig().set("Worlds." + lw.getSaveName() + ".joincommands", lw.getCommandsOnJoin());
+					m.getConfig().set("Worlds." + lw.getWorldName() + ".joincommands", lw.getCommandsOnJoin());
 					m.saveConfig();
 				}
 			} else if (args[0].equalsIgnoreCase("ListJoiningCommands")) {
@@ -752,7 +868,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					}
 
 					lw.setGameMode(change);
-					m.getConfig().set("Worlds." + lw.getSaveName() + ".gamemode", change.toString());
+					m.getConfig().set("Worlds." + lw.getWorldName() + ".gamemode", change.toString());
 					m.saveConfig();
 					sender.sendMessage(
 							prefix + "Changed gamemode for \"" + lw.getWorldName() + "\" to " + change.name() + ".");
@@ -792,11 +908,11 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 						l.setPitch(((Player) sender).getLocation().getPitch());
 					}
 					lw.setSpawn(l);
-					m.getConfig().set("Worlds." + lw.getSaveName() + ".spawnLoc.x", l.getX());
-					m.getConfig().set("Worlds." + lw.getSaveName() + ".spawnLoc.y", l.getY());
-					m.getConfig().set("Worlds." + lw.getSaveName() + ".spawnLoc.z", l.getZ());
-					m.getConfig().set("Worlds." + lw.getSaveName() + ".spawnLoc.yaw", l.getYaw());
-					m.getConfig().set("Worlds." + lw.getSaveName() + ".spawnLoc.pitch", l.getPitch());
+					m.getConfig().set("Worlds." + lw.getWorldName() + ".spawnLoc.x", l.getX());
+					m.getConfig().set("Worlds." + lw.getWorldName() + ".spawnLoc.y", l.getY());
+					m.getConfig().set("Worlds." + lw.getWorldName() + ".spawnLoc.z", l.getZ());
+					m.getConfig().set("Worlds." + lw.getWorldName() + ".spawnLoc.yaw", l.getYaw());
+					m.getConfig().set("Worlds." + lw.getWorldName() + ".spawnLoc.pitch", l.getPitch());
 					m.saveConfig();
 					sender.sendMessage(prefix + "Changed spawn for world \"" + lw.getWorldName() + "\" to " + x + " "
 							+ y + " " + z + ".");
@@ -832,7 +948,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 							return true;
 						}
 
-						m.getConfig().set("Worlds." + LobbyAPI.getLobbyWorld(wo).getSaveName(), null);
+						m.getConfig().set("Worlds." + LobbyAPI.getLobbyWorld(wo).getWorldName(), null);
 						m.saveConfig();
 						LobbyAPI.unregisterWorld(wo);
 						sender.sendMessage(prefix + "Removed world \"" + wo.getName() + "\"");
@@ -855,7 +971,6 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					boolean b = Boolean.parseBoolean(args[2]);
 					lw.setPortal(b);
 					ConfigHandler.setWorldVariable(lw, ConfigKeys.CanUsePortals.s, b);
-					m.saveConfig();
 					sender.sendMessage(
 							prefix + "Set the CanUsePortals for world \"" + lw.getWorldName() + "\" to " + b + "");
 				} else {
@@ -874,7 +989,6 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					boolean b = Boolean.parseBoolean(args[2]);
 					lw.setDisableHungerAndHealth(b);
 					ConfigHandler.setWorldVariable(lw, ConfigKeys.DisableHealthAndHunger.s, b);
-					m.saveConfig();
 					sender.sendMessage(prefix + "Set the DisableHealthAndHunger for world \"" + lw.getWorldName()
 							+ "\" to " + b + "");
 				} else {
@@ -892,7 +1006,6 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					boolean b = Boolean.parseBoolean(args[2]);
 					lw.setVoidDisable(b);
 					ConfigHandler.setWorldVariable(lw, ConfigKeys.DisableVoid.s, b);
-					m.saveConfig();
 					sender.sendMessage(
 							prefix + "Set the DisableVoid for world \"" + lw.getWorldName() + "\" to " + b + "");
 				} else {
@@ -909,7 +1022,6 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 						return false;
 					lw.setHidden(true);
 					ConfigHandler.setWorldVariable(lw, ConfigKeys.isHidden.s, true);
-					m.saveConfig();
 					sender.sendMessage(prefix + "Hidding world \"" + lw.getWorldName());
 				} else {
 					sender.sendMessage(
@@ -925,7 +1037,6 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 						return false;
 					lw.setHidden(false);
 					ConfigHandler.setWorldVariable(lw, ConfigKeys.isHidden.s, false);
-					m.saveConfig();
 					sender.sendMessage(prefix + "Showing world \"" + lw.getWorldName());
 				} else {
 					sender.sendMessage(
@@ -948,7 +1059,6 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 
 					lw.setWeatherState(ws);
 					ConfigHandler.setWorldVariable(lw, ConfigKeys.Weather.s, ws.name());
-					m.saveConfig();
 					sender.sendMessage(prefix + "Set the default weather for world \"" + lw.getWorldName() + "\" to "
 							+ ws.name() + "");
 				} else {
@@ -1024,50 +1134,6 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 								+ m.getConfig().getString("Server." + fi + ".name") + ".");
 					}
 				}
-			} else if (args.length > 0 && args[0].equalsIgnoreCase("clearPlayerData")) {
-				if (args.length >= 4) {
-					if (m.getServer().getPlayer(args[1]) != null) {
-						if (m.getServer().getWorld(args[2]) != null) {
-							if (args[3].equalsIgnoreCase("exp") || args[3].equalsIgnoreCase("xp")) {
-								m.getConfig().set(m.getServer().getPlayer(args[1]).getName() + "."
-										+ m.getServer().getWorld(args[2]).getName() + ".xp", null);
-								m.getConfig().set(m.getServer().getPlayer(args[1]).getName() + "."
-										+ m.getServer().getWorld(args[2]).getName() + ".xpl", null);
-							}
-							if (args[3].equalsIgnoreCase("Health"))
-								m.getConfig().set(m.getServer().getPlayer(args[1]).getName() + "."
-										+ m.getServer().getWorld(args[2]).getName() + ".health", 20);
-							if (args[3].equalsIgnoreCase("Hunger"))
-								m.getConfig().set(m.getServer().getPlayer(args[1]).getName() + "."
-										+ m.getServer().getWorld(args[2]).getName() + ".hunger", 20);
-							if (args[3].equalsIgnoreCase("Inventory")) {
-								for (int kl = 0; kl < 36; kl++) {
-									m.getConfig().set(m.getServer().getPlayer(args[1]).getName() + "."
-											+ m.getServer().getWorld(args[2]).getName() + ".i." + kl, null);
-								}
-								m.getConfig().set(m.getServer().getPlayer(args[1]).getName() + "."
-										+ m.getServer().getWorld(args[2]).getName() + ".a." + 1, null);
-								m.getConfig().set(m.getServer().getPlayer(args[1]).getName() + "."
-										+ m.getServer().getWorld(args[2]).getName() + ".a." + 2, null);
-								m.getConfig().set(m.getServer().getPlayer(args[1]).getName() + "."
-										+ m.getServer().getWorld(args[2]).getName() + ".a." + 3, null);
-								m.getConfig().set(m.getServer().getPlayer(args[1]).getName() + "."
-										+ m.getServer().getWorld(args[2]).getName() + ".a." + 4, null);
-							}
-							m.saveConfig();
-						} else {
-							sender.sendMessage(prefix + " That world does not exist");
-						}
-					} else {
-						sender.sendMessage(prefix + " That player does not exist.");
-					}
-
-				} else {
-					sender.sendMessage(prefix
-							+ " Useage: clearPlayerData (Player) (WorldName) (Exp,exp / Health / Hunger / Inventory)");
-					sender.sendMessage(prefix + " This will allow OPs to delete player data for specific worlds.");
-				}
-
 			} else {
 				int page = 0;
 				if (args.length > 1) {
@@ -1132,7 +1198,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 								ls.add(ChatColor.GRAY + s.getName());
 						}
 
-						if ((wo.isPrivate() && players.contains(player)) || !wo.isPrivate()) {
+						if (!wo.isPrivate() || players.contains(player)) {
 							ItemStack is = LobbyAPI.setName(wo.getDisplayName(), wo.getColor(), wo.getMaterial(), ls);
 							is.setAmount(wo.getSlotAmount());
 							if (player.getWorld().equals(wo.getMainWorld())) {
@@ -1186,7 +1252,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 		usages.put("addWorld", "Adds a world to the list");
 		usages.put("removeWorld", "Removes a world from the list");
 		usages.put("listWorlds", "Lists all the worlds added");
-		usages.put("Worlds", "Shows all stats of worlds");
+		// usages.put("Worlds", "Shows all stats of worlds");
 
 		usages.put("setMainLobby", "Changes the default spawn world");
 		usages.put("removeMainLobby", "Removes default spawn world");
@@ -1209,7 +1275,6 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 		usages.put("setGamemode", "Sets the description for a world");
 		usages.put("changeSpawn", "Changes the spawn location for a world");
 		usages.put("version", "Gets the version of the plugin");
-		usages.put("clearPlayerData", "Clear data for a player for a world");
 		usages.put("Bungee", "Toggles if this server has bungee enabled");
 		usages.put("listServer", "Lists all the registered servers");
 		usages.put("removeServer", "Removes a server from the list");
@@ -1222,6 +1287,11 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 		usages.put("listDefaultItems", "Adds the item in your hand to the list of default items.");
 		usages.put("addDecor", "Adds a decor item to the hub menu");
 		usages.put("removeDecor", "Removes a decor item.");
+
+		usages.put("toggleWhitelist", "Toggles whether the world is restricted to only certain players");
+		usages.put("addToWhitelist", "Adds a player to a world's whitelist");
+		usages.put("removeFromWhitelist", "Adds a player to a world's whitelist");
+		usages.put("listWhitelist", "Adds a player to a world's whitelist");
 	}
 
 	public void saveWorld(String fi, String savename, World wo, Location l, int color, int i, boolean hidden) {
