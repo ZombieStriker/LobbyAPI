@@ -108,7 +108,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 							tab.add(d.getSlot() + "");
 				} else if (b(args[0], "ChangeSpawn", "addJoiningCommand", "setDisplayName", "ListJoiningCommands",
 						"setDescription", "RemoveWorld", "SetMainLobby", "AddDefaultItem", "changeWorldSlot",
-						"RemoveDefaultItem", "ListDefaultItems")) {
+						"RemoveDefaultItem", "ListDefaultItems","goto","listwhitelist","addTowhitelist","removefromwhitelist","togglewhitelist")) {
 					if (args.length == 2) {
 						bLW(tab, args[1]);
 					}
@@ -271,6 +271,23 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					sender.sendMessage(prefix + " Usage:" + ChatColor.BOLD + " /LobbyAPI addDefaultItem [world]");
 					sender.sendMessage(prefix
 							+ " [world] = '~' for the world you are in or the world's name (it is Case Sensitive)");
+				}
+			} else if (args[0].equalsIgnoreCase("goto")) {
+				if (args.length >= 2) {
+					LobbyWorld lw = gLW(sender, args[1]);
+					if (lw == null)
+						return false;
+					if (sender instanceof Player) {
+						Player p = (Player) sender;
+						p.teleport(lw.getSpawn());
+						sender.sendMessage(prefix + " Teleporting to "+lw.getWorldName()+"'s spawn...");
+					} else {
+						sender.sendMessage(prefix + " Only players can send this command.");
+					}
+				} else {
+					sender.sendMessage(prefix + " Usage:" + ChatColor.BOLD + " /LobbyAPI goto [world]");
+					sender.sendMessage(prefix
+							+ " [world] = '~' for the world you want to go toe (it is Case Sensitive)");
 				}
 			} else if (args[0].equalsIgnoreCase("addDecor")) {
 				if (args.length >= 4) {
@@ -1292,6 +1309,9 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 		usages.put("addToWhitelist", "Adds a player to a world's whitelist");
 		usages.put("removeFromWhitelist", "Adds a player to a world's whitelist");
 		usages.put("listWhitelist", "Adds a player to a world's whitelist");
+		
+
+		usages.put("goto", "Teleports the player to the spawn of a world");
 	}
 
 	public void saveWorld(String fi, String savename, World wo, Location l, int color, int i, boolean hidden) {
@@ -1310,6 +1330,15 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 		m.getConfig().set("Worlds." + wo.getName() + ".gamemode", GameMode.SURVIVAL.name());
 		m.getConfig().set("Worlds." + wo.getName() + ".color", color);
 		m.getConfig().set("Worlds." + wo.getName() + "." + ConfigKeys.isHidden.s, hidden);
+		if(wo==Bukkit.getWorlds().get(0)) {
+			//if over
+			m.getConfig().set("Worlds." + wo.getName() + ".canuseportals", true);
+		}
+		if(wo==Bukkit.getWorlds().get(1)||wo==Bukkit.getWorlds().get(2)) {
+			//if nether or end
+			m.getConfig().set("Worlds." + wo.getName() + ".canuseportals", true);
+			m.getConfig().set("Worlds." + wo.getName() + ".connectedTo", Bukkit.getWorlds().get(0).getName());
+		}
 		m.saveConfig();
 	}
 

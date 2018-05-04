@@ -309,18 +309,18 @@ public class Main extends JavaPlugin implements Listener {
 		saveInventory(event.getPlayer(), event.getPlayer().getWorld());
 
 		if (event.getPlayer().getBedSpawnLocation() != null
-				&& event.getPlayer().getBedSpawnLocation().getWorld().equals(lb.getMainWorld()))
+				&& (event.getPlayer().getBedSpawnLocation().getWorld().equals(lb.getMainWorld())
+						|| (lb.getRespawnWorld() != null && event.getPlayer().getBedSpawnLocation().getWorld()
+								.equals(LobbyAPI.getLobbyWorld(lb.getRespawnWorld()).getMainWorld()))))
 			return;
 		// Do not interfere if the player has a bed in this world.
 
 		if (lb.getRespawnWorld() != null) {
 			event.setRespawnLocation(LobbyAPI.getLobbyWorld(lb.getRespawnWorld()).getSpawn());
-		} else if (LobbyWorld.getMainLobby() == null) {
-			event.setRespawnLocation(lb.getSpawn());
 		} else if (LobbyWorld.getMainLobby() != null) {
 			event.setRespawnLocation(LobbyWorld.getMainLobby().getSpawn());
 		} else {
-			event.setRespawnLocation(LobbyAPI.getLobby().getSpawn());
+			event.setRespawnLocation(lb.getSpawn());
 			// Should never happen. Test it
 		}
 	}
@@ -382,7 +382,7 @@ public class Main extends JavaPlugin implements Listener {
 							&& LobbyAPI.getLobbyWorld(p.getWorld()).getSpawnItems().size() > 0)
 						for (ItemStack is : LobbyAPI.getLobbyWorld(p.getWorld()).getSpawnItems())
 							if (is != null)
-								if (!p.getInventory().containsAtLeast(is,1))
+								if (!p.getInventory().containsAtLeast(is, 1))
 									p.getInventory().addItem(is);
 				}
 				lastWorld.put(p.getName(), p.getWorld());
@@ -443,83 +443,82 @@ public class Main extends JavaPlugin implements Listener {
 												.size() < wo.getMaxPlayers())) {
 									event.getWhoClicked()
 											.sendMessage(ChatColor.RED + "This world is full, please try again later.");
-								}else 
-									if (!event.getWhoClicked().hasPermission("lobbyapi.bypassworldlimits")
-											&& (wo.isPrivate() && !wo.getWhitelistedPlayersUUID().contains(event.getWhoClicked().getUniqueId()))) {
-										event.getWhoClicked()
-												.sendMessage(ChatColor.RED + "You are not whitelisted for this world.");
-								}else {
-								
-								
+								} else if (!event.getWhoClicked().hasPermission("lobbyapi.bypassworldlimits")
+										&& (wo.isPrivate() && !wo.getWhitelistedPlayersUUID()
+												.contains(event.getWhoClicked().getUniqueId()))) {
+									event.getWhoClicked()
+											.sendMessage(ChatColor.RED + "You are not whitelisted for this world.");
+								} else {
 
-								final PlayerSelectWorldEvent e = new PlayerSelectWorldEvent(
-										(Player) event.getWhoClicked(), wo);
-								// TODO: Veify: If world does not save location, return spawn.
-								if (getLastLocationForWorld((Player) event.getWhoClicked(), wo) != null) {
-									e.setDestination(getLastLocationForWorld((Player) event.getWhoClicked(), wo));
-								}
-								Bukkit.getPluginManager().callEvent(e);
-								if (!e.getIsCanceled()) {
-
-									// TODO: Find a better way of checking.
-									// If the player happens to have
-									// teleported from another world, this
-									// will not save their location.
-
-									LobbyWorld lw = LobbyAPI.getLobbyWorld(event.getWhoClicked().getWorld());
-									if (lw != null) {
-										if (lw.shouldWorldShouldSavePlayerLocation())
-											setLastLocationForWorld((Player) event.getWhoClicked(), lw);
+									final PlayerSelectWorldEvent e = new PlayerSelectWorldEvent(
+											(Player) event.getWhoClicked(), wo);
+									// TODO: Veify: If world does not save location, return spawn.
+									if (getLastLocationForWorld((Player) event.getWhoClicked(), wo) != null) {
+										e.setDestination(getLastLocationForWorld((Player) event.getWhoClicked(), wo));
 									}
+									Bukkit.getPluginManager().callEvent(e);
+									if (!e.getIsCanceled()) {
 
-									e.getPlayer().teleport(e.getDestination());
+										// TODO: Find a better way of checking.
+										// If the player happens to have
+										// teleported from another world, this
+										// will not save their location.
 
-									StringBuilder playersOnline = new StringBuilder();
-									Object[] oo = wo.getPlayers().toArray();
-									for (int i = 0; i < (wo.getPlayers().size() < 6 ? wo.getPlayers().size() : 7); i++)
-										playersOnline
-												.append(((Player) oo[i]).getDisplayName()
-														+ (i != (oo.length - 1 < 7 ? oo.length - 1 : 7) ? " ,"
-																: (oo.length - 7 > 0
-																		? " ...(" + (oo.length - 7) + " more)"
-																		: "")));
+										LobbyWorld lw = LobbyAPI.getLobbyWorld(event.getWhoClicked().getWorld());
+										if (lw != null) {
+											if (lw.shouldWorldShouldSavePlayerLocation())
+												setLastLocationForWorld((Player) event.getWhoClicked(), lw);
+										}
 
-									try {
-										Method method = e.getPlayer().getClass().getMethod("sendTitle", String.class,
-												String.class);
-										if (method != null) {
-											method.invoke(e.getPlayer(),
-													ChatColor.GOLD + "Teleporting to " + (wo.getWorldName()),
-													ChatColor.GRAY + "Players: " + playersOnline.toString());
-										} else {
+										e.getPlayer().teleport(e.getDestination());
+
+										StringBuilder playersOnline = new StringBuilder();
+										Object[] oo = wo.getPlayers().toArray();
+										for (int i = 0; i < (wo.getPlayers().size() < 6 ? wo.getPlayers().size()
+												: 7); i++)
+											playersOnline
+													.append(((Player) oo[i]).getDisplayName()
+															+ (i != (oo.length - 1 < 7 ? oo.length - 1 : 7) ? " ,"
+																	: (oo.length - 7 > 0
+																			? " ...(" + (oo.length - 7) + " more)"
+																			: "")));
+
+										try {
+											Method method = e.getPlayer().getClass().getMethod("sendTitle",
+													String.class, String.class);
+											if (method != null) {
+												method.invoke(e.getPlayer(),
+														ChatColor.GOLD + "Teleporting to " + (wo.getWorldName()),
+														ChatColor.GRAY + "Players: " + playersOnline.toString());
+											} else {
+												e.getPlayer().sendMessage(
+														ChatColor.GOLD + "Teleporting to " + (wo.getWorldName()));
+												e.getPlayer().sendMessage(
+														ChatColor.GRAY + "Players: " + playersOnline.toString());
+											}
+										} catch (Exception e2) {
 											e.getPlayer().sendMessage(
 													ChatColor.GOLD + "Teleporting to " + (wo.getWorldName()));
 											e.getPlayer().sendMessage(
 													ChatColor.GRAY + "Players: " + playersOnline.toString());
-										}
-									} catch (Exception e2) {
-										e.getPlayer()
-												.sendMessage(ChatColor.GOLD + "Teleporting to " + (wo.getWorldName()));
-										e.getPlayer()
-												.sendMessage(ChatColor.GRAY + "Players: " + playersOnline.toString());
 
-									}
-									event.setCancelled(true);
-
-									event.getWhoClicked().closeInventory();
-									Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-										public void run() {
-											PlayerChangeWorldEvent e2 = new PlayerChangeWorldEvent(e.getPlayer());
-											Bukkit.getPluginManager().callEvent(e2);
 										}
-									}, 2);
-									for (String s : wo.getCommandsOnJoin()) {
-										s = s.replaceAll("%player%", e.getPlayer().getName());
-										Bukkit.dispatchCommand(e.getPlayer(), s);
+										event.setCancelled(true);
+
+										event.getWhoClicked().closeInventory();
+										Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+											public void run() {
+												PlayerChangeWorldEvent e2 = new PlayerChangeWorldEvent(e.getPlayer());
+												Bukkit.getPluginManager().callEvent(e2);
+											}
+										}, 2);
+										for (String s : wo.getCommandsOnJoin()) {
+											s = s.replaceAll("%player%", e.getPlayer().getName());
+											Bukkit.dispatchCommand(e.getPlayer(), s);
+										}
+									} else {
+										return;
 									}
-								} else {
-									return;
-								}
 								}
 								event.getWhoClicked().closeInventory();
 								break;
@@ -769,7 +768,7 @@ public class Main extends JavaPlugin implements Listener {
 			@SuppressWarnings({ "deprecation", "unchecked" })
 			public void run() {
 				if (getConfig().contains("Worlds")) {
-					for (String name : getConfig().getConfigurationSection("Worlds").getKeys(false)) {
+					for (final String name : getConfig().getConfigurationSection("Worlds").getKeys(false)) {
 						String s = getConfig().getString("Worlds." + name + ".name");
 						String displayname = null;
 						if (getConfig().contains("Worlds." + name + ".displayname")) {
@@ -807,8 +806,12 @@ public class Main extends JavaPlugin implements Listener {
 								.getWeatherStateByName(getConfig().getString("Worlds." + name + ".weatherstate"));
 						World w = Bukkit.getWorld(getConfig().getString("Worlds." + name + ".spawnLoc.w"));
 						Location l = new Location(w, x, y, z);
-						if (l == null || l.getWorld() == null)
-							continue;
+						if (l == null || w == null) {
+							Bukkit.getConsoleSender()
+									.sendMessage(prefix + ChatColor.GOLD + "'" + s + "' was null. Creating new world");
+							w = Bukkit.createWorld(new WorldCreator(s));
+							l = new Location(w, x, y, z);
+						}
 						if (getConfig().contains("Worlds." + name + ".spawnLoc.yaw")) {
 							float yaw = (float) getConfig().getDouble("Worlds." + name + ".spawnLoc.yaw");
 							float pitch = (float) getConfig().getDouble("Worlds." + name + ".spawnLoc.pitch");
@@ -834,8 +837,8 @@ public class Main extends JavaPlugin implements Listener {
 						if (LobbyAPI.getLobbyWorld(s) != null)
 							LobbyAPI.unregisterWorld(getServer().getWorld(s));
 
-						LobbyWorld lw = LobbyAPI.registerWorldFromConfig(w, l, save, desc, color, i, GameMode.SURVIVAL,
-								false);
+						final LobbyWorld lw = LobbyAPI.registerWorldFromConfig(w, l, save, desc, color, i,
+								GameMode.SURVIVAL, false);
 						for (String jC : getConfig().getStringList("Worlds." + lw.getSaveName() + ".joincommands"))
 							lw.addCommand(jC);
 
@@ -854,8 +857,15 @@ public class Main extends JavaPlugin implements Listener {
 								: false;
 						lw.setWorldShouldSavePlayerLocation(locsaving);
 
-						if (ConfigHandler.containsWorldVariable(lw, ConfigKeys.CanUsePortals.s))
-							lw.setPortal(ConfigHandler.getWorldVariableBoolean(lw, ConfigKeys.CanUsePortals.s));
+						boolean portal = getConfig().contains("Worlds." + name + ".canuseportals")
+								? getConfig().getBoolean("Worlds." + name + ".canuseportals")
+								: false;
+						lw.setPortal(portal);
+
+						if (getConfig().contains("Worlds." + name + ".connectedTo")) {
+							lw.setRespawnWorld(
+									Bukkit.getWorld(getConfig().getString("Worlds." + name + ".connectedTo")));
+						}
 
 						if (ConfigHandler.containsWorldVariable(lw, ConfigKeys.DefaultItems.s))
 							lw.setSpawnItems((List<ItemStack>) ConfigHandler.getWorldVariableObject(lw,
@@ -866,19 +876,18 @@ public class Main extends JavaPlugin implements Listener {
 									ConfigHandler.getWorldVariableBoolean(lw, ConfigKeys.DisableHealthAndHunger.s));
 						if (ConfigHandler.containsWorldVariable(lw, ConfigKeys.DisableVoid.s))
 							lw.setVoidDisable(ConfigHandler.getWorldVariableBoolean(lw, ConfigKeys.DisableVoid.s));
-						
-						
+
 						boolean isprivate = getConfig().contains("Worlds." + name + ".isprivate")
 								? getConfig().getBoolean("Worlds." + name + ".isprivate")
 								: false;
 						List<String> uuids = getConfig().contains("Worlds." + name + ".whitelistedUUIDS")
 								? getConfig().getStringList("Worlds." + name + ".whitelistedUUIDS")
 								: null;
-								
+
 						lw.setIsPrivate(isprivate);
-						if(uuids!=null)
+						if (uuids != null)
 							lw.initWhitelist(uuids);
-						
+
 						// if (ConfigHandler.containsWorldVariable(lw,
 						// ConfigKeys.ShouldBeSavingLocation.s))
 						// lw.setWorldShouldSavePlayerLocation(

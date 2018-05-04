@@ -1,3 +1,12 @@
+3.7.64
+	Fixed the_end bug where you could never return to the overworld
+	added /lobbyapi goto
+	Added ability to connect worlds. Now players that die in the nether/end will teleport back to the overworld
+	World is now correctly being loaded.
+
+3.7.63
+	Added fix for unloaded worlds
+
 3.7.62
 	Fixed item duplication
 

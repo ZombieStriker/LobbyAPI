@@ -384,7 +384,6 @@ public class LobbyWorld {
 	}
 
 	public void setRespawnWorld(World world) {
-		if (world != null)
 			respawnWorld = world;
 	}
 
