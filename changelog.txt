@@ -1,3 +1,9 @@
+3.7.66
+	Fixed NPE for non-registered worlds
+
+3.7.65
+	Added ability to not remove items if the world being teleported to has the same save name
+
 3.7.64
 	Fixed the_end bug where you could never return to the overworld
 	added /lobbyapi goto
