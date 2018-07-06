@@ -790,6 +790,7 @@ public class LobbyAPI {
 			for (LobbyWorld lw : ml.getWorlds()) {
 				if (openslot == lw.getSlot()) {
 					isTaken = true;
+					break;
 				}
 			}
 			if (!isTaken) {

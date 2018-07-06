@@ -1,3 +1,16 @@
+3.7.69
+	Added lobbyapi.user as default
+	Fixed default gamemode checks
+	Fixed mainlobby overriding spawn locations on respawn.
+	Added ability to generate nethers and ends for other worlds.
+	
+3.7.68
+	Added config change to reload config whenever changes are made, making sure there can not be conflicts between main config and other config.
+
+3.7.67
+	Added fix for keeping same gamemode.
+	Fixed world selector saving
+
 3.7.66
 	Fixed NPE for non-registered worlds
 

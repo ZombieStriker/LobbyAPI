@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import me.zombie_striker.lobbyapi.LobbyWorld;
+import me.zombie_striker.lobbyapi.Main;
 
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -16,10 +17,12 @@ public class ConfigHandler {
 
 	private static FileConfiguration config;
 	private static File file;
+	private static Main m;
 
-	public static void setConfig(FileConfiguration f, File f2) {
+	public static void setConfig(FileConfiguration f, File f2, Main main) {
 		config = f;
 		file = f2;
+		m = main;
 	}
 
 	public enum ConfigKeys {
@@ -30,7 +33,7 @@ public class ConfigHandler {
 										"shouldsavelocation"), DefaultItems("defaultitems"), CustomAddedWorlds(
 												"CustomWorlds"), CustomAddedWorlds_Seed(
 														"Seeds"), ENABLE_PER_WORLD_INVENTORIES(
-																"Enable_Per_World_Inventories");
+																"Enable_Per_World_Inventories"),LINKED_NETHER("Linked_nether"),LINKED_END("Linked_End"),WORLDENVIROMENT("World_Enviroment"),PORTALLIST("Portal_Loc_List");
 
 		public String s;
 
@@ -61,6 +64,7 @@ public class ConfigHandler {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		m.reloadConfig();
 	}
 
 	public static void setLobbyAPIVariable(String key, Object value) {
@@ -71,6 +75,7 @@ public class ConfigHandler {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		m.reloadConfig();
 	}
 
 	public static ItemStack getLobbyAPIVariableItemstack(String key) {
@@ -92,6 +97,9 @@ public class ConfigHandler {
 	public static boolean containsWorldVariable(LobbyWorld lw, String key) {
 		return config.contains("Worlds." + lw.getWorldName() + "." + key);
 	}
+	public static boolean containsWorldVariable(String worldname, String key) {
+		return config.contains("Worlds." + worldname + "." + key);
+	}
 
 	public static void setWorldVariable(LobbyWorld lw, String key, Object value) {
 		config = YamlConfiguration.loadConfiguration(file);
@@ -101,6 +109,7 @@ public class ConfigHandler {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		m.reloadConfig();
 	}
 
 	public static int getWorldVariableInt(LobbyWorld lw, String key) {
@@ -133,5 +142,8 @@ public class ConfigHandler {
 
 	public static Object getWorldVariableObject(LobbyWorld lw, String key) {
 		return config.get("Worlds." + lw.getWorldName() + "." + key);
+	}
+	public static Object getWorldVariableObject(String lw, String key) {
+		return config.get("Worlds." + lw + "." + key);
 	}
 }

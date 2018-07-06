@@ -49,7 +49,7 @@ public class LobbyWorld {
 
 	private World respawnWorld;
 	private Location spawn;
-	private boolean canUsePortal;
+	private boolean canUsePortal=false;
 	private boolean canUseEnderChest;
 	private boolean isStaticTime;
 	private boolean disableHungerAndHealth;
@@ -61,6 +61,9 @@ public class LobbyWorld {
 	private int maxPlayers;
 
 	private World mainWorld;
+	
+	private World nether;
+	private World end;
 
 	private boolean isPrivate;
 	private Set<UUID> allowedPlayersUUID = new HashSet<UUID>();
@@ -69,10 +72,12 @@ public class LobbyWorld {
 	
 	private List<String> commandsIssed = new ArrayList<>();
 	
+	private List<Location> portalLocations = new ArrayList<Location>();
+	
 	private boolean shouldSavePlayerLocation = false;	
 
 	private List<ItemStack> worldItems;
-	private GameMode gamemode;
+	private GameMode gamemode=null;
 
 	private List<String> worldDescription = new ArrayList<String>();
 	private String saveName;
@@ -82,9 +87,30 @@ public class LobbyWorld {
 	private boolean loadedFromConfig;
 	private boolean isLobby = false;
 	
-	
-	
 	private String displayName;
+	
+	public void setNether(World nether) {
+		this.nether = nether;
+	}
+	public void setEnd(World end) {
+		this.end =end;
+	}
+	public World getNether() {
+		return nether;
+	}
+	public World getEnd() {
+		return end;
+	}
+	
+	public List<Location> getPortalLocations(){
+		return portalLocations;
+	}
+	public void setPortalLocations(List<Location> loc) {
+		portalLocations = loc;
+	}
+	
+	
+	
 	
 	public void setDisplayName(String display) {
 		this.displayName = display;
@@ -177,7 +203,7 @@ public class LobbyWorld {
 		this.saveName = saveName;
 		this.gamemode = gm;
 		
-		this.canUsePortal = ((mainWorld!=null&&Bukkit.getWorlds().get(0).equals(mainWorld))||worldname.equals("world_nether"));
+		//this.canUsePortal = ((mainWorld!=null&&Bukkit.getWorlds().get(0).equals(mainWorld))||worldname.equals("world_nether"));
 	}
 	
 	public enum WeatherState{
@@ -188,6 +214,9 @@ public class LobbyWorld {
 			this.data = data;
 		}
 		public static WeatherState getWeatherStateByName(String name){
+			if(name==null)
+				return null;
+			
 			if(name.equalsIgnoreCase("normal"))
 				return NORMAL;
 			if(name.equalsIgnoreCase("always_rain"))

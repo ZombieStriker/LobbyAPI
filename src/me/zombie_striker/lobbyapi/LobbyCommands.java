@@ -11,6 +11,7 @@ import me.zombie_striker.lobbyapi.utils.ConfigHandler;
 import me.zombie_striker.lobbyapi.utils.ConfigHandler.ConfigKeys;
 
 import org.bukkit.*;
+import org.bukkit.World.Environment;
 import org.bukkit.command.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -108,7 +109,8 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 							tab.add(d.getSlot() + "");
 				} else if (b(args[0], "ChangeSpawn", "addJoiningCommand", "setDisplayName", "ListJoiningCommands",
 						"setDescription", "RemoveWorld", "SetMainLobby", "AddDefaultItem", "changeWorldSlot",
-						"RemoveDefaultItem", "ListDefaultItems","goto","listwhitelist","addTowhitelist","removefromwhitelist","togglewhitelist")) {
+						"RemoveDefaultItem", "ListDefaultItems", "goto", "listwhitelist", "addTowhitelist",
+						"removefromwhitelist", "togglewhitelist","generateNetherAndEndFor")) {
 					if (args.length == 2) {
 						bLW(tab, args[1]);
 					}
@@ -280,14 +282,14 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					if (sender instanceof Player) {
 						Player p = (Player) sender;
 						p.teleport(lw.getSpawn());
-						sender.sendMessage(prefix + " Teleporting to "+lw.getWorldName()+"'s spawn...");
+						sender.sendMessage(prefix + " Teleporting to " + lw.getWorldName() + "'s spawn...");
 					} else {
 						sender.sendMessage(prefix + " Only players can send this command.");
 					}
 				} else {
 					sender.sendMessage(prefix + " Usage:" + ChatColor.BOLD + " /LobbyAPI goto [world]");
-					sender.sendMessage(prefix
-							+ " [world] = '~' for the world you want to go toe (it is Case Sensitive)");
+					sender.sendMessage(
+							prefix + " [world] = '~' for the world you want to go toe (it is Case Sensitive)");
 				}
 			} else if (args[0].equalsIgnoreCase("addDecor")) {
 				if (args.length >= 4) {
@@ -414,8 +416,8 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					if (isMaxed) {
 						StringBuilder names = new StringBuilder();
 						for (UUID uuid : lw.getWhitelistedPlayersUUID()) {
-							names.append(Bukkit.getOfflinePlayer(uuid).getName()+", ");
-							if(names.length() > 320) {
+							names.append(Bukkit.getOfflinePlayer(uuid).getName() + ", ");
+							if (names.length() > 320) {
 								names.append("....(and more)");
 								break;
 							}
@@ -423,7 +425,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 						sender.sendMessage(names.toString());
 					} else {
 						for (UUID uuid : lw.getWhitelistedPlayersUUID()) {
-							sender.sendMessage("-"+Bukkit.getOfflinePlayer(uuid).getName());
+							sender.sendMessage("-" + Bukkit.getOfflinePlayer(uuid).getName());
 						}
 					}
 				} else {
@@ -431,7 +433,6 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					sender.sendMessage(prefix
 							+ " [world] = '~' for the world you are in or the world's name (it is Case Sensitive)");
 				}
-				
 
 			} else if (args[0].equalsIgnoreCase("addToWhitelist")) {
 				if (args.length >= 2) {
@@ -439,29 +440,30 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					if (lw == null)
 						return false;
 					String name = null;
-					if(args.length>=3) {
+					if (args.length >= 3) {
 						name = args[2];
-					if(name.equalsIgnoreCase("~"))
+						if (name.equalsIgnoreCase("~"))
+							name = sender.getName();
+					} else {
 						name = sender.getName();
-					}else {
-						name=sender.getName();
 					}
 					OfflinePlayer player = Bukkit.getOfflinePlayer(name);
-					if(!player.hasPlayedBefore()) {
-						sender.sendMessage(prefix+" The player must have joined before to add them to the whitelist.");
+					if (!player.hasPlayedBefore()) {
+						sender.sendMessage(
+								prefix + " The player must have joined before to add them to the whitelist.");
 						return true;
-					}else {
+					} else {
 						lw.addWhitelistedPlayer(player);
 						m.getConfig().set("Worlds." + lw.getWorldName() + ".whitelistedUUIDS", lw.whitelistToString());
 						m.saveConfig();
-						sender.sendMessage(prefix+"Added player "+name+" to whitelist");
+						sender.sendMessage(prefix + "Added player " + name + " to whitelist");
 					}
 				} else {
-					sender.sendMessage(prefix + " Usage:" + ChatColor.BOLD + " /LobbyAPI addToWhitelist [world] [player]");
+					sender.sendMessage(
+							prefix + " Usage:" + ChatColor.BOLD + " /LobbyAPI addToWhitelist [world] [player]");
 					sender.sendMessage(prefix
 							+ " [world] = '~' for the world you are in or the world's name (it is Case Sensitive)");
-					sender.sendMessage(prefix
-							+ " [player] = The player that will be added. '~' for yourself");
+					sender.sendMessage(prefix + " [player] = The player that will be added. '~' for yourself");
 				}
 			} else if (args[0].equalsIgnoreCase("removeFromWhitelist")) {
 				if (args.length >= 2) {
@@ -469,35 +471,31 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					if (lw == null)
 						return false;
 					String name = null;
-					if(args.length>=3) {
+					if (args.length >= 3) {
 						name = args[2];
-					if(name.equalsIgnoreCase("~"))
+						if (name.equalsIgnoreCase("~"))
+							name = sender.getName();
+					} else {
 						name = sender.getName();
-					}else {
-						name=sender.getName();
 					}
 					OfflinePlayer player = Bukkit.getOfflinePlayer(name);
-					if(!player.hasPlayedBefore()) {
-						sender.sendMessage(prefix+" The player must have joined before to remove them from the whitelist.");
+					if (!player.hasPlayedBefore()) {
+						sender.sendMessage(
+								prefix + " The player must have joined before to remove them from the whitelist.");
 						return true;
-					}else {
+					} else {
 						lw.removeWhitelistedPlayer(player);
 						m.getConfig().set("Worlds." + lw.getWorldName() + ".whitelistedUUIDS", lw.whitelistToString());
 						m.saveConfig();
-						sender.sendMessage(prefix+"Removed player "+name+" from whitelist");
+						sender.sendMessage(prefix + "Removed player " + name + " from whitelist");
 					}
 				} else {
-					sender.sendMessage(prefix + " Usage:" + ChatColor.BOLD + " /LobbyAPI removefromwhitelist [world] [player]");
+					sender.sendMessage(
+							prefix + " Usage:" + ChatColor.BOLD + " /LobbyAPI removefromwhitelist [world] [player]");
 					sender.sendMessage(prefix
 							+ " [world] = '~' for the world you are in or the world's name (it is Case Sensitive)");
-					sender.sendMessage(prefix
-							+ " [player] = The player that will be removed. '~' for yourself");
+					sender.sendMessage(prefix + " [player] = The player that will be removed. '~' for yourself");
 				}
-				
-				
-				
-				
-				
 
 			} else if (args[0].equalsIgnoreCase("removeDefaultItem")) {
 				if (args.length >= 3) {
@@ -629,7 +627,12 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 						if (wo == null) {
 							sender.sendMessage(prefix
 									+ " This world does not exist. Creating world using LobbyAPI WorldGenerator");
-							wo = Bukkit.createWorld(new WorldCreator(args[1]));
+							WorldCreator wc = new WorldCreator(args[1]);
+							if (args.length >= 9) {
+								wc.seed(Long.parseLong(args[8]));
+							}
+
+							wo = Bukkit.createWorld(wc);
 							ConfigHandler.setCustomWorldValue(wo.getName(), ConfigKeys.CustomAddedWorlds_Seed.s,
 									wo.getSeed());
 						}
@@ -682,8 +685,8 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 							l.setYaw(((Player) sender).getLocation().getYaw());
 							l.setPitch(((Player) sender).getLocation().getPitch());
 						}
-						LobbyAPI.registerWorldFromConfig(wo, l, savename, wo.getName(), color, i, GameMode.SURVIVAL,
-								false);
+						LobbyWorld lw = LobbyAPI.registerWorldFromConfig(wo, l, savename, wo.getName(), color, i,
+								GameMode.SURVIVAL, false);
 						String fi = wo.getName();
 						if (m.getConfig().contains("Worlds." + fi)) {
 							sender.sendMessage(prefix
@@ -693,32 +696,17 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 						saveWorld(fi, savename, wo, l, color, i, false);
 						sender.sendMessage(prefix + "Added world \"" + wo.getName() + "\" with a slot of " + i
 								+ ": Spawn at " + x + " " + y + " " + z + ".");
-						if (Bukkit.getWorlds().get(0).equals(wo)) {
+
+						boolean genNether = false;
+						if (args.length >= 10) {
+							genNether = Boolean.parseBoolean(args[8]);
+						}
+						if (genNether) {
+							// if (Bukkit.getWorlds().get(0).equals(wo)) {
 							// If the wo is the main world
 							sender.sendMessage(prefix
-									+ "Since this world is the main world, the nether and end world will be registered and linked to this world if they have not been registered already.");
-
-							World nether = Bukkit.getWorld("world_nether");
-							World end = Bukkit.getWorld("world_the_end");
-							if (nether == null) {
-								Bukkit.createWorld(new WorldCreator("world_nether"));
-								nether = Bukkit.getWorld("world_nether");
-							}
-							if (end == null) {
-								Bukkit.createWorld(new WorldCreator("world_the_end"));
-								end = Bukkit.getWorld("world_the_end");
-							}
-							if (LobbyAPI.getLobbyWorld(nether) == null) {
-								LobbyAPI.registerWorldFromConfig(nether, nether.getSpawnLocation(), savename,
-										nether.getName(), color, i, GameMode.SURVIVAL, true);
-								saveWorld(nether.getName(), savename, nether, nether.getSpawnLocation(), color, 51,
-										true);
-							}
-							if (LobbyAPI.getLobbyWorld(end) == null) {
-								LobbyAPI.registerWorldFromConfig(end, end.getSpawnLocation(), savename, end.getName(),
-										color, i, GameMode.SURVIVAL, true);
-								saveWorld(end.getName(), savename, end, end.getSpawnLocation(), color, 50, true);
-							}
+									+ "The nether and end world will be registered and linked to this world if they have not been registered already.");
+							generateConnctingWorlds(lw);
 						}
 						m.loadLocalWorlds();
 					}
@@ -733,21 +721,38 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					sender.sendMessage(prefix + " [color] = OPTIONAL: The color of the block.");
 					sender.sendMessage(prefix
 							+ " [savename] = OPTIONAL: The name of inventory save (only useful if you wish for multiple worlds to have the same inventory)");
+					sender.sendMessage(prefix + " [seed] = OPTIONAL: The seed for the world");
+					sender.sendMessage(prefix
+							+ " [shouldGenerateNether] = OPTIONAL: True or false: Whether LobbyAPI should allow that world to have a nether");
 				}
 
 			} else if (args[0].equalsIgnoreCase("removeWorldSelector")) {
 				m.setWorldSelector(null);
 				sender.sendMessage(prefix + "World selector removed.");
+				ConfigHandler.setLobbyAPIVariable(ConfigHandler.ConfigKeys.WorldSelector.s, null);
 			} else if (args.length > 0 && args[0].equalsIgnoreCase("setWorldSelector")) {
 				if (sender instanceof Player) {
 					Player p = (Player) sender;
 					if (p.getItemInHand() != null) {
 						m.setWorldSelector(p.getItemInHand());
+						ConfigHandler.setLobbyAPIVariable(ConfigHandler.ConfigKeys.WorldSelector.s, p.getItemInHand());
 						sender.sendMessage(prefix + " World seelector set to item in player's hand");
 					} else {
 						sender.sendMessage(prefix
 								+ " You need to have an item in your hands in order to set it as a world selector.");
 					}
+				}
+			} else if (args[0].equalsIgnoreCase("generateNetherAndEndFor")) {
+				if (args.length >= 2) {
+					LobbyWorld lw = gLW(sender, args[1]);
+					if (lw == null)
+						return false;
+					generateConnctingWorlds(lw);
+					sender.sendMessage(prefix + " Generated worlds for "+lw.getWorldName()+".");
+				} else {
+					sender.sendMessage(prefix + " Usage:" + ChatColor.BOLD
+							+ " /LobbyAPI generateNetherAndEndFor [name] ");
+					sender.sendMessage(prefix + " [name] = The world's name (it is Case Sensitive)");
 				}
 			} else if (args[0].equalsIgnoreCase("setLocationSaving")) {
 				if (args.length >= 3) {
@@ -879,9 +884,13 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 						return false;
 					GameMode change = GameMode.SURVIVAL;
 					try {
-						change = GameMode.valueOf(args[2]);
+						change = GameMode.valueOf(args[2].toUpperCase());
 					} catch (Exception e) {
-						e.printStackTrace();
+						try {
+							change = GameMode.getByValue(Integer.parseInt(args[2]));
+						} catch (Exception e2) {
+							e.printStackTrace();
+						}
 					}
 
 					lw.setGameMode(change);
@@ -1269,6 +1278,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 		usages.put("addWorld", "Adds a world to the list");
 		usages.put("removeWorld", "Removes a world from the list");
 		usages.put("listWorlds", "Lists all the worlds added");
+		usages.put("generateNetherAndEndFor", "Generates a nether and end world for the world");
 		// usages.put("Worlds", "Shows all stats of worlds");
 
 		usages.put("setMainLobby", "Changes the default spawn world");
@@ -1309,12 +1319,68 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 		usages.put("addToWhitelist", "Adds a player to a world's whitelist");
 		usages.put("removeFromWhitelist", "Adds a player to a world's whitelist");
 		usages.put("listWhitelist", "Adds a player to a world's whitelist");
-		
 
 		usages.put("goto", "Teleports the player to the spawn of a world");
 	}
 
+	public void generateConnctingWorlds(LobbyWorld mainWorld) {
+		World wo = mainWorld.getMainWorld();
+		World nether = Bukkit.getWorld(wo.getName() + "_nether");
+		World end = Bukkit.getWorld(wo.getName() + "_the_end");
+		if (nether == null) {
+			Bukkit.createWorld(new WorldCreator(wo.getName() + "_nether").environment(Environment.NETHER).generator(Bukkit.getWorlds().get(1).getGenerator()).seed(mainWorld.getMainWorld().getSeed()));
+			nether = Bukkit.getWorld(wo.getName() + "_nether");
+		}
+		if (end == null) {
+			Bukkit.createWorld(new WorldCreator(wo.getName() + "_the_end").environment(Environment.THE_END).generator(Bukkit.getWorlds().get(2).getGenerator()).seed(mainWorld.getMainWorld().getSeed()));
+			end = Bukkit.getWorld(wo.getName() + "_the_end");
+		}
+		int netherid = LobbyAPI.getOpenSlot(90);
+		int endid = LobbyAPI.getOpenSlot(90);
+
+		@SuppressWarnings("deprecation")
+		LobbyWorld n = LobbyAPI.registerWorldFromConfig(nether, nether.getSpawnLocation(), mainWorld.getSaveName(),
+				null, 0, netherid, mainWorld.getGameMode(), true);
+		@SuppressWarnings("deprecation")
+		LobbyWorld e = LobbyAPI.registerWorldFromConfig(end, end.getSpawnLocation(), mainWorld.getSaveName(), null, 0,
+				endid, mainWorld.getGameMode(), true);
+
+		saveWorld(mainWorld.getSaveName(), nether, nether.getSpawnLocation(), 0, netherid, true, true,
+				mainWorld.getWorldName());
+		saveWorld(mainWorld.getSaveName(), end, end.getSpawnLocation(), 0, endid, true, true,
+				mainWorld.getWorldName());
+
+		mainWorld.setNether(nether);
+		mainWorld.setEnd(end);
+		n.setNether(wo);
+		e.setEnd(wo);
+		mainWorld.setPortal(true);
+		m.getConfig().set("Worlds." + wo.getName() + "." + ConfigKeys.CanUsePortals.s, true);
+		m.getConfig().set("Worlds." + nether.getName() + "." + ConfigKeys.WORLDENVIROMENT.s, Environment.NETHER.name());
+		m.getConfig().set("Worlds." + end.getName() + "." + ConfigKeys.WORLDENVIROMENT.s, Environment.THE_END.name());
+		m.getConfig().set("Worlds." + wo.getName() + "." + ConfigKeys.LINKED_NETHER.s, nether.getName());
+		m.getConfig().set("Worlds." + nether.getName() + "." + ConfigKeys.LINKED_NETHER.s, wo.getName());
+		m.getConfig().set("Worlds." + wo.getName() + "." + ConfigKeys.LINKED_END.s, end.getName());
+		m.getConfig().set("Worlds." + end.getName() + "." + ConfigKeys.LINKED_END.s, wo.getName());
+		m.saveConfig();
+	}
+
 	public void saveWorld(String fi, String savename, World wo, Location l, int color, int i, boolean hidden) {
+		boolean k = false;
+		String j = null;
+		if (wo == Bukkit.getWorlds().get(1) || wo == Bukkit.getWorlds().get(2)) {
+			k = true;
+			j = Bukkit.getWorlds().get(0).getName();
+		}
+		if (wo == Bukkit.getWorlds().get(0)) {
+			k = true;
+		}
+		saveWorld(savename, wo, l, color, i, hidden, k, j);
+
+	}
+
+	public void saveWorld(String savename, World wo, Location l, int color, int i, boolean hidden,
+			boolean canUsePortals, String connectedTo) {
 		m.getConfig().set("Worlds." + wo.getName() + ".name", wo.getName());
 		m.getConfig().set("Worlds." + wo.getName() + ".displayname", wo.getName());
 		m.getConfig().set("Worlds." + wo.getName() + ".spawnLoc.x", l.getX());
@@ -1330,15 +1396,9 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 		m.getConfig().set("Worlds." + wo.getName() + ".gamemode", GameMode.SURVIVAL.name());
 		m.getConfig().set("Worlds." + wo.getName() + ".color", color);
 		m.getConfig().set("Worlds." + wo.getName() + "." + ConfigKeys.isHidden.s, hidden);
-		if(wo==Bukkit.getWorlds().get(0)) {
-			//if over
-			m.getConfig().set("Worlds." + wo.getName() + ".canuseportals", true);
-		}
-		if(wo==Bukkit.getWorlds().get(1)||wo==Bukkit.getWorlds().get(2)) {
-			//if nether or end
-			m.getConfig().set("Worlds." + wo.getName() + ".canuseportals", true);
-			m.getConfig().set("Worlds." + wo.getName() + ".connectedTo", Bukkit.getWorlds().get(0).getName());
-		}
+		m.getConfig().set("Worlds." + wo.getName() + ".canuseportals", canUsePortals);
+		m.getConfig().set("Worlds." + wo.getName() + ".connectedTo", connectedTo);
+
 		m.saveConfig();
 	}
 

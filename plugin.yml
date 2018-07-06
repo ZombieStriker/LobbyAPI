@@ -1,5 +1,5 @@
 main: me.zombie_striker.lobbyapi.Main
-version: 3.7.66
+version: 3.7.69
 name: LobbyAPI
 commands:
  Lobby:
@@ -12,9 +12,10 @@ permissions:
      description: Gives access to all LobbyAPI features
      children:
        lobbyapi.commands: true
-       lobbyapi.hub: true
+       lobbyapi.user: true
        lobbyapi.bypassworldlimits: true
    lobbyapi.user:
+     default: true
      description: Gives access that only a user should have, which is to access the hub command
      children:
        lobbyapi.hub: true
