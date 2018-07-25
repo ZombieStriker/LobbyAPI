@@ -45,7 +45,7 @@ public class LobbyWorld {
 
 	private int amount;
 	private short color;
-	private Material material = Material.WOOL;
+	private Material material = Material.DIAMOND_BLOCK;
 
 	private World respawnWorld;
 	private Location spawn;

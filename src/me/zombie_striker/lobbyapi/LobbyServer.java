@@ -24,7 +24,7 @@ public class LobbyServer {
 
 	private int amount = 1;
 	private short color;
-	private Material material = Material.STAINED_GLASS;
+	private Material material = Material.GLASS;
 	
 	private boolean isHidden = false;
 

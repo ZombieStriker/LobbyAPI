@@ -9,6 +9,7 @@ import java.util.UUID;
 import me.zombie_striker.lobbyapi.LobbyWorld.WeatherState;
 import me.zombie_striker.lobbyapi.utils.ConfigHandler;
 import me.zombie_striker.lobbyapi.utils.ConfigHandler.ConfigKeys;
+import me.zombie_striker.pluginconstructor.PluginConstructorAPI;
 
 import org.bukkit.*;
 import org.bukkit.World.Environment;
@@ -300,7 +301,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 						m = Material.matchMaterial(args[2]);
 					} catch (Exception e) {
 						String[] vals = args[2].split(":");
-						m = Material.getMaterial(Integer.parseInt(vals[0]));
+						//m = Material.getMaterial(Integer.parseInt(vals[0]));
 						if (vals.length > 1) {
 							data = Short.parseShort(vals[1]);
 						}
@@ -775,22 +776,23 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					LobbyWorld lw = gLW(sender, args[1]);
 					if (lw == null)
 						return false;
-					Material change = Material.WOOL;
+					Material change = Material.IRON_BLOCK;
 					try {
-						change = Material.getMaterial(Integer.parseInt(args[2]));
-					} catch (Exception e) {
 						change = Material.matchMaterial(args[2]);
-						if (change == null || change == Material.AIR) {
-							sender.sendMessage(prefix
-									+ " You need to provide a valid material. Either use the ID or the Material Enum name");
-							return true;
-						}
+						//change = Material.getMaterial(Integer.parseInt(args[2]));
+					} catch (Exception e) {
+						//change = Material.matchMaterial(args[2]);
+					}
+					if (change == null || change == Material.AIR) {
+						sender.sendMessage(prefix
+								+ " You need to provide a valid material. Either use the Material Enum name");
+						return true;
 					}
 
 					lw.setMaterial(change);
-					lw.setColor((short) 0);
+					//lw.setColor((short) 0);
 					m.getConfig().set("Worlds." + lw.getWorldName() + ".material", change.toString());
-					m.getConfig().set("Worlds." + lw.getWorldName() + ".color", 0);
+					//m.getConfig().set("Worlds." + lw.getWorldName() + ".color", 0);
 					m.saveConfig();
 					sender.sendMessage(prefix + "Changed material for \"" + lw.getWorldName() + "\" to "
 							+ change.toString() + ".");
@@ -1229,10 +1231,10 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 							is.setAmount(wo.getSlotAmount());
 							if (player.getWorld().equals(wo.getMainWorld())) {
 								try {
-									me.zombie_striker.pluginconstructor.InWorldGlowEnchantment pps = new me.zombie_striker.pluginconstructor.InWorldGlowEnchantment(
-											m.enchID);
-									is.addEnchantment(pps, 1);
-								} catch (Exception e) {
+									//me.zombie_striker.pluginconstructor.InWorldGlowEnchantment pps = new me.zombie_striker.pluginconstructor.InWorldGlowEnchantment(
+									//		m.enchID);
+									is.addEnchantment(PluginConstructorAPI.registerGlowEnchantment(), 1);
+								} catch (Error|Exception e) {
 
 								}
 							}

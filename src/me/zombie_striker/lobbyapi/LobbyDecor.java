@@ -9,7 +9,7 @@ public class LobbyDecor {
 
 	private int amount=1;
 	//private short color;
-	private Material material = Material.WOOL;
+	private Material material = Material.GRASS;
 	private short data = 0;
 
 	private String displayname;

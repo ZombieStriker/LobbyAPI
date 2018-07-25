@@ -1,7 +1,23 @@
+3.7.72
+	Removed debug for nether
+	Added distance check for nether. Nether portals now cutt off after 100 blocks, so you can now use nether portals for better, faster transportation without needing to go to the overworld to build the portals
+	Fixed issue where portals were not being set in the frames
+
+3.7.71
+	Fixed pre-support for 1.13.
+	Fixed problem where material types would not be accepted
+
+3.7.70
+	Added pre-support for 1.13
+
+3.7.69b
+	fixed for loop
+
 3.7.69
 	Added lobbyapi.user as default
 	Fixed default gamemode checks
 	Fixed mainlobby overriding spawn locations on respawn.
+	Added ability to set seed for world
 	Added ability to generate nethers and ends for other worlds.
 	
 3.7.68

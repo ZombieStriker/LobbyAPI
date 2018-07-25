@@ -26,11 +26,11 @@ import java.util.concurrent.ThreadLocalRandom;
 import me.zombie_striker.lobbyapi.LobbyWorld.WeatherState;
 import me.zombie_striker.lobbyapi.utils.*;
 import me.zombie_striker.pluginconstructor.GithubUpdater;
-import me.zombie_striker.pluginconstructor.PluginConstructorAPI;
 import me.zombie_striker.lobbyapi.utils.ConfigHandler.ConfigKeys;
 
 import org.bukkit.*;
 import org.bukkit.World.Environment;
+import org.bukkit.block.BlockState;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.*;
 import org.bukkit.event.*;
@@ -43,7 +43,6 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.event.weather.WeatherChangeEvent;
-import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.inventory.*;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.*;
@@ -70,7 +69,6 @@ public class Main extends JavaPlugin implements Listener {
 
 	private static String prefix = ChatColor.GOLD + "[" + ChatColor.WHITE + "LobbyAPI" + ChatColor.GOLD + "]"
 			+ ChatColor.WHITE;
-	int enchID = 1;
 
 	@EventHandler
 	public void event(WeatherChangeEvent e) {
@@ -179,10 +177,6 @@ public class Main extends JavaPlugin implements Listener {
 			getServer().getConsoleSender().sendMessage(prefix + ChatColor.GREEN + "Bungee For LobbyAPI is enabled");
 		} else {
 			getServer().getConsoleSender().sendMessage(prefix + ChatColor.DARK_RED + "Bungee For LobbyAPI is disabled");
-		}
-		try {
-			enchID = PluginConstructorAPI.registerGlow();
-		} catch (Exception e) {
 		}
 		loadLocalWorlds();
 		loadLocalServers();
@@ -367,23 +361,28 @@ public class Main extends JavaPlugin implements Listener {
 			return;
 		}
 		if (event.getCause() == TeleportCause.NETHER_PORTAL) {
-			Location loc = event.getTo();
+			Material portal = Material.valueOf("PORTAL");
+			if (portal == null)
+				portal = Material.matchMaterial("NETHER_PORTAL");
+			Location to = event.getTo();
 			if (event.getTo() == null) {
-
 				LobbyWorld netherlobby = curr.getNether() == null ? null : LobbyAPI.getLobbyWorld(curr.getNether());
 				if (netherlobby != null && !netherlobby.getPortalLocations().isEmpty()) {
 					// If portals have already been registered
 					Location testspot = event.getFrom().clone();
 					testspot.setWorld(curr.getNether());
+					double distance = 10000;
 					if (event.getFrom().getWorld().getEnvironment() == Environment.NETHER) {
+						// 100 block distance check
 						testspot.setX(testspot.getX() * 8);
 						testspot.setZ(testspot.getZ() * 8);
 					} else {
+						distance = 900;
+						// 30 block distance check
 						testspot.setX(testspot.getX() / 8);
 						testspot.setZ(testspot.getZ() / 8);
 					}
 					Location closest = null;
-					double distance = Integer.MAX_VALUE;
 					boolean foundGood1 = false;
 					while (!foundGood1 && !netherlobby.getPortalLocations().isEmpty()) {
 						for (Location loctest : netherlobby.getPortalLocations()) {
@@ -393,17 +392,22 @@ public class Main extends JavaPlugin implements Listener {
 								closest = loctest;
 							}
 						}
-						if(closest.getBlock().getType()!=Material.PORTAL) {
+						if (closest.getBlock().getType() != portal) {
 							netherlobby.getPortalLocations().remove(closest);
 							List<String> coords = ConfigHandler.getWorldVariableList(curr, ConfigKeys.PORTALLIST.s);
-							String testst = closest.getBlockX() + "," + closest.getBlockY() + ","
-									+ closest.getBlockZ();
+							String testst = closest.getBlockX() + "," + closest.getBlockY() + "," + closest.getBlockZ();
 							coords.remove(testst);
 							getConfig().set("Worlds." + curr.getWorldName() + "." + ConfigKeys.PORTALLIST.s, coords);
-							saveConfig();							
+							saveConfig();
+						} else {
+							foundGood1 = true;
 						}
 					}
-					event.setTo(closest);
+					to = closest;
+
+				}
+				if (to != null) {
+					event.setTo(to);
 					Location blockyfrom = new Location(event.getFrom().getWorld(), event.getFrom().getBlockX(),
 							event.getFrom().getBlockY(), event.getFrom().getBlockZ());
 					List<String> coords = ConfigHandler.getWorldVariableList(curr, ConfigKeys.PORTALLIST.s);
@@ -416,15 +420,14 @@ public class Main extends JavaPlugin implements Listener {
 						saveConfig();
 					}
 					return;
-
 				} else {
-					loc = event.getPlayer().getLocation();
+					to = event.getPlayer().getLocation();
 					if (event.getFrom().getWorld().getEnvironment() == Environment.NETHER) {
-						loc.setX(loc.getX() * 8);
-						loc.setZ(loc.getZ() * 8);
+						to.setX(to.getX() * 8);
+						to.setZ(to.getZ() * 8);
 					} else {
-						loc.setX(loc.getX() / 8);
-						loc.setZ(loc.getZ() / 8);
+						to.setX(to.getX() / 8);
+						to.setZ(to.getZ() / 8);
 					}
 					if (curr.getNether() == null) {
 						curr.setNether(Bukkit.createWorld(new WorldCreator(
@@ -432,17 +435,17 @@ public class Main extends JavaPlugin implements Listener {
 										.environment(Environment.NETHER)
 										.generator(Bukkit.getWorlds().get(1).getGenerator())
 										.seed(event.getFrom().getWorld().getSeed())));
-						Bukkit.broadcastMessage("loading nether right now");
+						//Bukkit.broadcastMessage("loading nether right now");
 					}
-					loc.setWorld(curr.getNether());
-					if (loc.getY() >= 128)
+					to.setWorld(curr.getNether());
+					if (to.getY() >= 128)
 						for (int i = 127; i >= 1; i--) {
-							loc.setY(i);
-							if (loc.getBlock() != null && (loc.getBlock().getType() == Material.AIR
-									|| loc.getBlock().getType() == Material.PORTAL)) {
-								Location loc2 = loc.clone().add(0, 1, 0);
+							to.setY(i);
+							if (to.getBlock() != null
+									&& (to.getBlock().getType() == Material.AIR || to.getBlock().getType() == portal)) {
+								Location loc2 = to.clone().add(0, 1, 0);
 								if (loc2.getBlock() != null && (loc2.getBlock().getType() == Material.AIR
-										|| loc2.getBlock().getType() == Material.PORTAL)) {
+										|| loc2.getBlock().getType() == portal)) {
 									break;
 								}
 							}
@@ -458,7 +461,7 @@ public class Main extends JavaPlugin implements Listener {
 					 * getConfig().set("Worlds."+netherlobby.getWorldName()+"."+ConfigKeys.
 					 * PORTALLIST.s, coords); saveConfig();
 					 */
-					Location portaltemp = loc.clone();
+					Location portaltemp = to.clone();
 					for (int x = -1; x < 3; x++) {
 						for (int y = -1; y < 4; y++) {
 							if (x == -1 || x == 2 || y == -1 || y == 3)
@@ -467,11 +470,13 @@ public class Main extends JavaPlugin implements Listener {
 					}
 					for (int x = 0; x < 2; x++) {
 						for (int y = 0; y < 3; y++) {
-							portaltemp.clone().add(x, y, -1).getBlock().setType(Material.PORTAL);
+							BlockState portalState = portaltemp.clone().add(x, y, -1).getBlock().getState();
+							portalState.setType(portal);
+							portalState.update(true, false);
 						}
 					}
 				}
-				loc.setWorld(curr.getNether());
+				to.setWorld(curr.getNether());
 				Location blockyfrom = new Location(event.getFrom().getWorld(), event.getFrom().getBlockX(),
 						event.getFrom().getBlockY(), event.getFrom().getBlockZ());
 				List<String> coords = ConfigHandler.getWorldVariableList(curr, ConfigKeys.PORTALLIST.s);
@@ -482,7 +487,7 @@ public class Main extends JavaPlugin implements Listener {
 					getConfig().set("Worlds." + curr.getWorldName() + "." + ConfigKeys.PORTALLIST.s, coords);
 					saveConfig();
 				}
-				event.setTo(loc);
+				event.setTo(to);
 			}
 		} else if (event.getCause() == TeleportCause.END_PORTAL) {
 			Location loc = event.getTo();
