@@ -25,42 +25,56 @@ public class LobbyServer {
 	private int amount = 1;
 	private short color;
 	private Material material = Material.GLASS;
-	
+
 	private boolean isHidden = false;
 
 	private boolean loadedFromConfig;
-	
-	public LobbyServer(boolean loadedFC, String servername, int ID, int amount,
-			short color){
+
+	public LobbyServer(boolean loadedFC, String servername, int ID, int amount, short color) {
 		this.loadedFromConfig = loadedFC;
 		this.servername = servername;
 		this.ID = ID;
 		this.amount = amount;
 		this.color = color;
 	}
-	public void setHidden(boolean b){
+
+	public void setHidden(boolean b) {
 		this.isHidden = b;
 	}
-	public boolean isHidden(){return this.isHidden;}
-	public boolean loadedFromConfig(){
+
+	public boolean isHidden() {
+		return this.isHidden;
+	}
+
+	public boolean loadedFromConfig() {
 		return this.loadedFromConfig;
 	}
-	public int getSlot(){
+
+	public int getSlot() {
 		return this.ID;
 	}
-	public String getName(){
+
+	public String getName() {
 		return this.servername;
 	}
-	public short getColor(){
+
+	public short getColor() {
 		return this.color;
 	}
-	public Material getMaterial(){
+
+	public Material getMaterial() {
 		return this.material;
 	}
-	public int getAmount(){
+
+	public int getAmount() {
 		return this.amount;
 	}
-	public void setAmount(int amount){
+
+	public void setAmount(int amount) {
 		this.amount = amount;
+	}
+
+	public void setMaterial(Material m) {
+		this.material = m;
 	}
 }

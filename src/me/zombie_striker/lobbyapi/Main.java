@@ -62,6 +62,8 @@ public class Main extends JavaPlugin implements Listener {
 
 	@SuppressWarnings("unused")
 	private LobbyAPI la = new LobbyAPI(this);
+	
+	public boolean hasBungee = false;
 
 	private boolean enablePWI = true;
 
@@ -173,9 +175,11 @@ public class Main extends JavaPlugin implements Listener {
 			}
 		}.runTaskTimer(this, 0, 10 * 20L);
 		if (getConfig() != null && getConfig().contains("hasBungee") && getConfig().getBoolean("hasBungee")) {
+			hasBungee = true;
 			getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
 			getServer().getConsoleSender().sendMessage(prefix + ChatColor.GREEN + "Bungee For LobbyAPI is enabled");
 		} else {
+			hasBungee = false;
 			getServer().getConsoleSender().sendMessage(prefix + ChatColor.DARK_RED + "Bungee For LobbyAPI is disabled");
 		}
 		loadLocalWorlds();
@@ -580,8 +584,6 @@ public class Main extends JavaPlugin implements Listener {
 					if (isBungee) {
 						for (LobbyServer s : bungeeServers) {
 							if (s.getSlot() == event.getSlot()) {
-								// if
-								// (event.getCurrentItem().getItemMeta().getDisplayName().equals(s.getName())) {
 								teleportBungee((Player) event.getWhoClicked(), s.getName());
 								event.getWhoClicked().closeInventory();
 								break;
@@ -592,16 +594,7 @@ public class Main extends JavaPlugin implements Listener {
 						for (LobbyWorld wo : worlds) {
 							if (wo == null)
 								continue;
-							/*
-							 * if (wo.getDisplayName() == null) {
-							 * Bukkit.getConsoleSender().sendMessage("This world has no name :" + wo);
-							 * event.getWhoClicked().sendMessage("This world has no name :" + wo); continue;
-							 * }
-							 */
 							if (wo.getSlot() == event.getSlot() && !wo.isHidden()) {
-								// if
-								// (event.getCurrentItem().getItemMeta().getDisplayName().equals(wo.getDisplayName()))
-								// {
 								if (!event.getWhoClicked().hasPermission("lobbyapi.bypassworldlimits")
 										&& (wo.hasMaxPlayers() && getServer().getWorld(wo.getWorldName()).getPlayers()
 												.size() < wo.getMaxPlayers())) {
@@ -1145,11 +1138,21 @@ public class Main extends JavaPlugin implements Listener {
 						int color = getConfig().getInt("Server." + fi + ".color");
 						LobbyAPI.unregisterBungeeServer(s);
 						LobbyAPI.registerBungeeServerFromConfig(s, i, color);
-						Bukkit.getConsoleSender().sendMessage(prefix + " added server '" + s + "'");
+						LobbyServer server = getLobbyServer(s);
+						if(getConfig().contains("Server." + fi + ".material"))
+							server.setMaterial(Material.matchMaterial(getConfig().getString("Server." + fi + ".material")));
+						Bukkit.getConsoleSender().sendMessage(prefix + " Added server '" + s + "'");
 					}
 				}
 			}
 		}, 2L);
+	}
+	public LobbyServer getLobbyServer(String name) {
+		for(LobbyServer s : bungeeServers) {
+			if(s.getName().equals(name))
+				return s;
+		}
+		return null;
 	}
 
 	public ItemStack getWorldSelector() {
