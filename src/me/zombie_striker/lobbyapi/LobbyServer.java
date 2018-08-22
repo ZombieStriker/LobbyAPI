@@ -15,12 +15,18 @@
  */
 package me.zombie_striker.lobbyapi;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.bukkit.Material;
 
 public class LobbyServer {
 
 	private String servername;
 	private int ID;
+
+	private String displayname;
+	private List<String> lore = new ArrayList<>();
 
 	private int amount = 1;
 	private short color;
@@ -76,5 +82,21 @@ public class LobbyServer {
 
 	public void setMaterial(Material m) {
 		this.material = m;
+	}
+
+	public void setLore(List<String> lore) {
+		this.lore = lore;
+	}
+
+	public List<String> getLore() {
+		return lore;
+	}
+
+	public void setDisplayname(String displayname) {
+		this.displayname = displayname;
+	}
+
+	public String getDisplayname() {
+		return displayname;
 	}
 }

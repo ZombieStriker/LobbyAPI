@@ -58,7 +58,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 
 	private LobbyServer gLS(CommandSender sender, String args) {
 		LobbyServer wo = null;
-		wo = m.getLobbyServer(args);
+		wo = m.getBungeeServer(args);
 		if (wo == null) {
 			sender.sendMessage(prefix + " This world does not exist!");
 			return null;
@@ -125,12 +125,18 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					if (args.length == 2)
 						for (LobbyDecor d : m.decor)
 							tab.add(d.getSlot() + "");
-				} else if (b(args[0], "ChangeSpawn", "addJoiningCommand", "setDisplayName", "ListJoiningCommands",
-						"setDescription", "RemoveWorld", "SetMainLobby", "AddDefaultItem", "changeWorldSlot",
-						"RemoveDefaultItem", "ListDefaultItems", "goto", "listwhitelist", "addTowhitelist",
-						"removefromwhitelist", "togglewhitelist", "generateNetherAndEndFor")) {
+				} else if (b(args[0], "ChangeSpawn", "addJoiningCommand", "ListJoiningCommands", "setDescription",
+						"RemoveWorld", "SetMainLobby", "AddDefaultItem", "changeWorldSlot", "RemoveDefaultItem",
+						"ListDefaultItems", "goto", "listwhitelist", "addTowhitelist", "removefromwhitelist",
+						"togglewhitelist", "generateNetherAndEndFor")) {
 					if (args.length == 2) {
 						bLW(tab, args[1]);
+					}
+				} else if (b(args[0], "setDisplayName")) {
+					if (args.length == 2) {
+						bLW(tab, args[1]);
+						if (m.hasBungee)
+							bLS(tab, args[1]);
 					}
 				} else if (args[0].equalsIgnoreCase("setMaterial")) {
 					if (args.length == 2) {
@@ -611,6 +617,23 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 				}
 			} else if (args[0].equalsIgnoreCase("setDescription")) {
 				if (args.length >= 2) {
+					if(gLS(sender, args[1])!=null) {
+
+						LobbyServer lw = gLS(sender, args[1]);
+						if (lw == null)
+							return false;
+						StringBuilder sb = new StringBuilder();
+						for (int i = 2; i < args.length; i++) {
+							sb.append(args[i] + " ");
+						}
+						List<String> g = new ArrayList<String>();
+						g.add(ChatColor.translateAlternateColorCodes('&', sb.toString()));
+						lw.setLore(g);
+						m.getConfig().set("Server." + lw.getName() + ".lore", g);
+						m.saveConfig();
+						sender.sendMessage(prefix + "Changed server description for server \"" + lw.getName() + "\" to "
+								+ sb.toString() + ".");
+					}else {
 					LobbyWorld lw = gLW(sender, args[1]);
 					if (lw == null)
 						return false;
@@ -625,6 +648,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					m.saveConfig();
 					sender.sendMessage(prefix + "Changed world description for world \"" + lw.getWorldName() + "\" to "
 							+ sb.toString() + ".");
+					}
 				} else {
 					sender.sendMessage(
 							prefix + " Usage:" + ChatColor.BOLD + " /LobbyAPI setDescription [world] [description...]");
@@ -792,7 +816,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 				}
 			} else if (args[0].equalsIgnoreCase("setMaterial")) {
 				if (args.length >= 3) {
-					if (m.hasBungee && m.getLobbyServer(args[1]) != null) {
+					if (m.hasBungee && m.getBungeeServer(args[1]) != null) {
 						LobbyServer lw = gLS(sender, args[1]);
 						if (lw == null)
 							return false;
@@ -814,8 +838,8 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 						m.getConfig().set("Server." + lw.getName() + ".material", change.toString());
 						// m.getConfig().set("Worlds." + lw.getWorldName() + ".color", 0);
 						m.saveConfig();
-						sender.sendMessage(
-								prefix + "Changed material for server \"" + lw.getName() + "\" to " + change.toString() + ".");
+						sender.sendMessage(prefix + "Changed material for server \"" + lw.getName() + "\" to "
+								+ change.toString() + ".");
 
 					} else {
 						LobbyWorld lw = gLW(sender, args[1]);
@@ -852,23 +876,42 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 
 			} else if (args[0].equalsIgnoreCase("setDisplayName")) {
 				if (args.length >= 3) {
-					LobbyWorld lw = gLW(sender, args[1]);
-					if (lw == null) {
-						sender.sendMessage("The world has not been registeed. Use /lobbyapi addWorld");
-						return false;
+					if (gLS(sender, args[1]) != null) {
+						LobbyServer lw = gLS(sender, args[1]);
+						if (lw == null) {
+							sender.sendMessage("The world has not been registeed. Use /lobbyapi addWorld");
+							return false;
+						}
+						StringBuilder sb = new StringBuilder();
+						for (int i = 2; i < args.length; i++) {
+							sb.append(args[i]);
+							if (i != args.length - 1)
+								sb.append(" ");
+						}
+						lw.setDisplayname(ChatColor.translateAlternateColorCodes('&', sb.toString()));
+						sender.sendMessage(prefix + " Changing the worlds displayname to \"" + sb.toString() + "\"");
+						m.getConfig().set("Server." + lw.getName() + ".displayname", lw.getDisplayname());
+						m.saveConfig();
+					} else {
+						LobbyWorld lw = gLW(sender, args[1]);
+						if (lw == null) {
+							sender.sendMessage("The world has not been registeed. Use /lobbyapi addWorld");
+							return false;
+						}
+						StringBuilder sb = new StringBuilder();
+						for (int i = 2; i < args.length; i++) {
+							sb.append(args[i]);
+							if (i != args.length - 1)
+								sb.append(" ");
+						}
+						lw.setDisplayName(ChatColor.translateAlternateColorCodes('&', sb.toString()));
+						sender.sendMessage(prefix + " Changing the worlds displayname to \"" + sb.toString() + "\"");
+						m.getConfig().set("Worlds." + lw.getWorldName() + ".displayname", lw.getDisplayName());
+						m.saveConfig();
 					}
-					StringBuilder sb = new StringBuilder();
-					for (int i = 2; i < args.length; i++) {
-						sb.append(args[i]);
-						if (i != args.length - 1)
-							sb.append(" ");
-					}
-					lw.setDisplayName(ChatColor.translateAlternateColorCodes('&', sb.toString()));
-					sender.sendMessage(prefix + " Changing the worlds displayname to \"" + sb.toString() + "\"");
-					m.getConfig().set("Worlds." + lw.getWorldName() + ".displayname", lw.getDisplayName());
-					m.saveConfig();
 				} else {
-					sender.sendMessage(prefix + " Usage: /lobbyAPI setDisplayName [World] [The displayname]");
+					sender.sendMessage(prefix + " Usage: /lobbyAPI setDisplayName [World] [Displayname]");
+
 				}
 			} else if (args[0].equalsIgnoreCase("addJoiningCommand")) {
 				if (args.length >= 3) {
@@ -1165,6 +1208,8 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					m.getConfig().set("Server." + server + ".i", i);
 					m.getConfig().set("Server." + server + ".color", color);
 					m.getConfig().set("Server." + server + ".material", "GLASS");
+					m.getConfig().set("Server." + server + ".displayname", "&a" + server);
+					m.getConfig().set("Server." + server + ".lore", new ArrayList<>());
 					m.saveConfig();
 					sender.sendMessage(prefix + "Added server \"" + server + "\" with a slot of " + i + ".");
 					m.loadLocalServers();
@@ -1178,6 +1223,10 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 			} else if (args.length > 0 && args[0].equalsIgnoreCase("removeserver")) {
 				if (args.length >= 2) {
 					String server = args[1];
+					if(gLS(sender, server)==null) {
+						sender.sendMessage(prefix+" Server is not registered");
+						return true;
+					}
 					LobbyAPI.unregisterBungeeServer(server);
 					for (String fi : m.getConfig().getConfigurationSection("Server").getKeys(false)) {
 						if (m.getConfig().getString("Server." + fi + ".name") != null
@@ -1233,7 +1282,9 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 			}
 		}
 
-		if (cmd.getName().equalsIgnoreCase("Lobby") || cmd.getName().equalsIgnoreCase("hub")) {
+		if (cmd.getName().equalsIgnoreCase("Lobby") || cmd.getName().equalsIgnoreCase("hub"))
+
+		{
 
 			if (sender instanceof Player) {
 				Player player = (Player) sender;
@@ -1311,7 +1362,8 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 						if (!lb.isHidden()) {
 							List<String> ls = new ArrayList<String>();
 							ls.add(ChatColor.RED + "" + ChatColor.GREEN + ChatColor.GOLD + "BungeeCord Server");
-							ItemStack is = LobbyAPI.setName(lb.getName(), lb.getColor(), lb.getMaterial(), ls);
+							ls.addAll(lb.getLore());
+							ItemStack is = LobbyAPI.setName(lb.getDisplayname(), lb.getColor(), lb.getMaterial(), ls);
 							is.setAmount(lb.getAmount());
 							m.inventory.setItem(lb.getSlot(), is);
 						}
@@ -1388,8 +1440,8 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					.generator(Bukkit.getWorlds().get(2).getGenerator()).seed(mainWorld.getMainWorld().getSeed()));
 			end = Bukkit.getWorld(wo.getName() + "_the_end");
 		}
-		int netherid = LobbyAPI.getOpenSlot(90);
-		int endid = LobbyAPI.getOpenSlot(90);
+		int netherid = LobbyAPI.getOpenSlot(10);
+		int endid = LobbyAPI.getOpenSlot(10);
 
 		@SuppressWarnings("deprecation")
 		LobbyWorld n = LobbyAPI.registerWorldFromConfig(nether, nether.getSpawnLocation(), mainWorld.getSaveName(),

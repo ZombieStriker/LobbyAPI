@@ -310,7 +310,7 @@ public class LobbyAPI {
 	public static LobbyWorld registerHiddenWorld(World world, Location spawn,
 			String saveLetter, GameMode gamemode) {
 		LobbyWorld lw = new LobbyWorld(false, world.getName(),
-				getOpenSlot(500), 1, (short) 0, spawn, saveLetter, gamemode);
+				getOpenSlot(10), 1, (short) 0, spawn, saveLetter, gamemode);
 		addLobbyWorld(lw);
 		hideWorld(world, true);
 		return lw;
@@ -333,7 +333,7 @@ public class LobbyAPI {
 	 */
 	public static LobbyWorld registerHiddenWorld(World world, Location spawn,
 			String saveLetter, String worldDescription, GameMode gamemode) {
-		LobbyWorld lw = new LobbyWorld(false, world.getName(), 99, 1,
+		LobbyWorld lw = new LobbyWorld(false, world.getName(), getOpenSlot(0), 1,
 				(short) 0, spawn, saveLetter, gamemode);
 		addLobbyWorld(lw);
 		addWorldDescriptionLine(world, worldDescription);
@@ -444,7 +444,7 @@ public class LobbyAPI {
 	 * @param ls
 	 */
 	public static void addBungeeServer(LobbyServer ls) {
-		ml.getBWorlds().add(ls);
+		ml.getBungeeServers().add(ls);
 	}
 
 	/**
@@ -454,7 +454,7 @@ public class LobbyAPI {
 	 * @return the LobbyServer instance
 	 */
 	public static LobbyServer getServer(String name) {
-		for (LobbyServer ls : ml.getBWorlds()) {
+		for (LobbyServer ls : ml.getBungeeServers()) {
 			if (ls.getName().equals(name))
 				return ls;
 		}
@@ -467,9 +467,8 @@ public class LobbyAPI {
 	 * @param name
 	 * @return
 	 */
-	@SuppressWarnings("unlikely-arg-type")
 	public static boolean removeBungeeServer(String name) {
-		return ml.getBWorlds().remove(name);
+		return ml.getBungeeServers().remove(ml.getBungeeServer(name));
 
 	}
 
@@ -794,7 +793,7 @@ public class LobbyAPI {
 				}
 			}
 			if (!isTaken) {
-				for (LobbyServer ls : ml.getBWorlds()) {
+				for (LobbyServer ls : ml.getBungeeServers()) {
 					if (openslot == ls.getSlot()) {
 						isTaken = true;
 						break;

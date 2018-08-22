@@ -1,3 +1,17 @@
+3.7.76
+	Added fix for portals not teleporting entities the same way it teleports players
+	Fixed system so that the default portal systems are used
+
+3.7.75
+	Fixed /lobbyapi setDescription for lobby servers
+	Fixed setDisplayname for servers.
+	Fixed displaynames resetting on reload
+	Fixed bungee servers not being correctly removed.
+	Fixed lore for servers
+
+3.7.74
+	Added Displaynames and Lore for servers
+
 3.7.73
 	Fixed BungeeServers
 	Added more control over what material is used for servers
