@@ -30,7 +30,6 @@ import me.zombie_striker.lobbyapi.utils.ConfigHandler.ConfigKeys;
 
 import org.bukkit.*;
 import org.bukkit.World.Environment;
-import org.bukkit.block.BlockState;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.*;
 import org.bukkit.event.*;
@@ -803,6 +802,10 @@ public class Main extends JavaPlugin implements Listener {
 	private void saveEnderChest(Player p, Inventory chest, World w) {
 
 		LobbyWorld lw = LobbyAPI.getLobbyWorld(w.getName());
+		if(lw==null) {
+			p.sendMessage(prefix+" The world you are in is not registered by LobbyAPI. Contact the server owner or OP and show them this message.");
+			return;
+		}
 		String world2 = lw.getSaveName();
 		File tempHolder = new File(getDataFolder() + File.separator + "playerfiles",
 				p.getUniqueId().toString() + ".yml");
@@ -831,6 +834,10 @@ public class Main extends JavaPlugin implements Listener {
 			return p.getEnderChest();
 
 		LobbyWorld lw = LobbyAPI.getLobbyWorld(w.getName());
+		if(lw==null) {
+			p.sendMessage(prefix+" The world you are in is not registered by LobbyAPI. Contact the server owner or OP and show them this message.");
+			return p.getEnderChest();
+		}
 		String world2 = lw.getSaveName();
 		File tempHolder = new File(getDataFolder() + File.separator + "playerfiles",
 				p.getUniqueId().toString() + ".yml");

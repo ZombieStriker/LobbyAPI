@@ -1,3 +1,6 @@
+3.7.77
+	Fixed EnderChest NPE for unregistered worlds.
+
 3.7.76
 	Added fix for portals not teleporting entities the same way it teleports players
 	Fixed system so that the default portal systems are used
