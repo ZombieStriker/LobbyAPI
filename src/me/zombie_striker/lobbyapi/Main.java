@@ -306,6 +306,9 @@ public class Main extends JavaPlugin implements Listener {
 	@EventHandler
 	private void onPlayerDeath(PlayerRespawnEvent event) {
 		LobbyWorld lb = LobbyAPI.getLobbyWorld(event.getPlayer().getWorld().getName());
+		
+		if(lb==null)
+			return;
 
 		if (!event.getPlayer().getWorld().getGameRuleValue("keepInventory").equalsIgnoreCase("true"))
 			clearInventory(event.getPlayer());

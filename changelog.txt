@@ -1,3 +1,6 @@
+3.7.78
+	Added fix for unregistered worlds on death.
+
 3.7.77
 	Fixed EnderChest NPE for unregistered worlds.
 

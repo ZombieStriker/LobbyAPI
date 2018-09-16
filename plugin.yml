@@ -1,5 +1,5 @@
 main: me.zombie_striker.lobbyapi.Main
-version: 3.7.77
+version: 3.7.78
 api-version: 1.13
 name: LobbyAPI
 commands:
