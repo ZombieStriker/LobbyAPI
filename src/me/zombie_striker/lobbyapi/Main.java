@@ -303,11 +303,12 @@ public class Main extends JavaPlugin implements Listener {
 				setLastLocationForWorld(event.getEntity(), lw, null);
 	}
 
+	@SuppressWarnings("deprecation")
 	@EventHandler
 	private void onPlayerDeath(PlayerRespawnEvent event) {
 		LobbyWorld lb = LobbyAPI.getLobbyWorld(event.getPlayer().getWorld().getName());
-		
-		if(lb==null)
+
+		if (lb == null)
 			return;
 
 		if (!event.getPlayer().getWorld().getGameRuleValue("keepInventory").equalsIgnoreCase("true"))
@@ -372,12 +373,37 @@ public class Main extends JavaPlugin implements Listener {
 			event.useTravelAgent(true);
 			TravelAgent ta = event.getPortalTravelAgent();
 			ta.setCanCreatePortal(true);
-			event.setTo(new Location(curr.getEnd(), 0, 0, 0));
+			// event.setTo(new Location(curr.getEnd(), 0, 0, 0));
+			Location temp = event.getTo();
+			if (temp != null) {
+				temp.setWorld(curr.getEnd());
+			} else {
+				if (event.getFrom().getWorld().getEnvironment() == Environment.THE_END) {
+					temp = new Location(curr.getEnd(), 0,100,0);
+				} else {
+					temp = curr.getSpawn();
+				}
+				
+			}
+			event.setTo(temp);
 		} else if (event.getTo().getWorld() == Bukkit.getWorlds().get(1)) {
 			event.useTravelAgent(true);
 			TravelAgent ta = event.getPortalTravelAgent();
 			ta.setCanCreatePortal(true);
-			event.setTo(new Location(curr.getNether(), 0, 0, 0));
+			// event.setTo(new Location(curr.getNether(), 0, 0, 0));
+			Location temp = event.getTo();
+			if (temp != null) {
+				temp.setWorld(curr.getNether());
+			} else {
+				if (event.getFrom().getWorld().getEnvironment() == Environment.NETHER) {
+					temp = new Location(curr.getNether(), event.getFrom().getX() * 8, event.getFrom().getY(),
+							event.getFrom().getZ() * 8);
+				} else {
+					temp = new Location(curr.getNether(), event.getFrom().getX() / 8, event.getFrom().getY(),
+							event.getFrom().getZ() / 8);
+				}
+			}
+			event.setTo(temp);
 		} else if (event.getTo().getWorld() == Bukkit.getWorlds().get(0)) {
 			event.useTravelAgent(true);
 			TravelAgent ta = event.getPortalTravelAgent();
@@ -405,12 +431,38 @@ public class Main extends JavaPlugin implements Listener {
 			event.useTravelAgent(true);
 			TravelAgent ta = event.getPortalTravelAgent();
 			ta.setCanCreatePortal(true);
-			event.setTo(new Location(curr.getEnd(), 0, 0, 0));
+			// event.setTo(new Location(curr.getEnd(), 0, 0, 0));
+			Location temp = event.getTo();
+			if (temp != null) {
+				temp.setWorld(curr.getEnd());
+			} else {
+				if (event.getFrom().getWorld().getEnvironment() == Environment.THE_END) {
+					temp = new Location(curr.getEnd(), 0,100,0);
+				} else {
+					temp = curr.getSpawn();
+				}
+				
+			}
+			event.setTo(temp);
 		} else if (event.getCause() == TeleportCause.NETHER_PORTAL) {
 			event.useTravelAgent(true);
 			TravelAgent ta = event.getPortalTravelAgent();
 			ta.setCanCreatePortal(true);
-			event.setTo(new Location(curr.getNether(), 0, 0, 0));
+			// event.gett.setTo(new Location(curr.getNether(), event.getFrom().getX()/8, 0,
+			// 0));
+			Location temp = event.getTo();
+			if (temp != null) {
+				temp.setWorld(curr.getNether());
+			} else {
+				if (event.getFrom().getWorld().getEnvironment() == Environment.NETHER) {
+					temp = new Location(curr.getNether(), event.getFrom().getX() * 8, event.getFrom().getY(),
+							event.getFrom().getZ() * 8);
+				} else {
+					temp = new Location(curr.getNether(), event.getFrom().getX() / 8, event.getFrom().getY(),
+							event.getFrom().getZ() / 8);
+				}
+			}
+			event.setTo(temp);
 		} else {
 			event.useTravelAgent(true);
 			TravelAgent ta = event.getPortalTravelAgent();
@@ -805,8 +857,9 @@ public class Main extends JavaPlugin implements Listener {
 	private void saveEnderChest(Player p, Inventory chest, World w) {
 
 		LobbyWorld lw = LobbyAPI.getLobbyWorld(w.getName());
-		if(lw==null) {
-			p.sendMessage(prefix+" The world you are in is not registered by LobbyAPI. Contact the server owner or OP and show them this message.");
+		if (lw == null) {
+			p.sendMessage(prefix
+					+ " The world you are in is not registered by LobbyAPI. Contact the server owner or OP and show them this message.");
 			return;
 		}
 		String world2 = lw.getSaveName();
@@ -837,8 +890,9 @@ public class Main extends JavaPlugin implements Listener {
 			return p.getEnderChest();
 
 		LobbyWorld lw = LobbyAPI.getLobbyWorld(w.getName());
-		if(lw==null) {
-			p.sendMessage(prefix+" The world you are in is not registered by LobbyAPI. Contact the server owner or OP and show them this message.");
+		if (lw == null) {
+			p.sendMessage(prefix
+					+ " The world you are in is not registered by LobbyAPI. Contact the server owner or OP and show them this message.");
 			return p.getEnderChest();
 		}
 		String world2 = lw.getSaveName();
@@ -1082,10 +1136,12 @@ public class Main extends JavaPlugin implements Listener {
 
 								@Override
 								public void run() {
-									if (getConfig().contains("Worlds." + lw.getWorldName() + "."+ConfigKeys.LINKED_END.s))
+									if (getConfig()
+											.contains("Worlds." + lw.getWorldName() + "." + ConfigKeys.LINKED_END.s))
 										lw.setEnd(Bukkit.getWorld(
 												ConfigHandler.getWorldVariableString(lw, ConfigKeys.LINKED_END.s)));
-									if (getConfig().contains("Worlds." + lw.getWorldName() + "."+ConfigKeys.LINKED_NETHER.s))
+									if (getConfig()
+											.contains("Worlds." + lw.getWorldName() + "." + ConfigKeys.LINKED_NETHER.s))
 										lw.setNether(Bukkit.getWorld(
 												ConfigHandler.getWorldVariableString(lw, ConfigKeys.LINKED_NETHER.s)));
 								}

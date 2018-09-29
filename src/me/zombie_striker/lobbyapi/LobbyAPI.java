@@ -481,6 +481,7 @@ public class LobbyAPI {
 	 * @param Lore
 	 * @return the custom itemstack
 	 */
+	@SuppressWarnings("deprecation")
 	public static ItemStack setName(String name, int numb, Material mat,
 			List<String> lore) {
 		ItemStack is = new ItemStack(mat, 1);
@@ -520,6 +521,7 @@ public class LobbyAPI {
 	 * @param mat
 	 * @return
 	 */
+	@SuppressWarnings("deprecation")
 	public static ItemStack setName(String name, int numb, Material mat) {
 		ItemStack is = new ItemStack(mat, 1);
 		ItemMeta im = is.getItemMeta();
