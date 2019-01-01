@@ -28,6 +28,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
+
 public class LobbyAPI {
 
 	private static Main ml;
@@ -36,6 +39,22 @@ public class LobbyAPI {
 		ml = mll;
 	}
 
+
+	public static void updateServerCount(Player player) {
+		for(LobbyServer ls : ml.getBungeeServers()) {
+			updateServerCount(player, ls);
+		}
+	}
+	public static void updateServerCount(Player player, LobbyServer ls) {
+		ByteArrayDataOutput baos = ByteStreams.newDataOutput();
+		try {
+			baos.writeUTF("PlayerCount");
+			baos.writeUTF(ls.getName());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		player.sendPluginMessage(ml, "BungeeCord", baos.toByteArray());
+	}
 
 	/**
 	 * returns if the world has a max amount of players for the world
@@ -614,7 +633,7 @@ public class LobbyAPI {
 	 */
 	@Deprecated
 	public static void setWorldMenuAmount(World world, Integer amount) {
-		getLobbyWorld(world).setSlotAmount(amount);
+		getLobbyWorld(world).setAmount(amount);
 	}
 
 	/**

@@ -24,28 +24,19 @@ import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-public class LobbyWorld {
+public class LobbyWorld extends LobbyIcon{
 
 	private static LobbyWorld MAIN_LOBBY = null;
 	
 	public static LobbyWorld getMainLobby(){
 	return MAIN_LOBBY;	
 	}
-	
-	
-	private String worldname;
-	private int ID;
-
-	private int amount;
-	private short color;
-	private Material material = Material.DIAMOND_BLOCK;
 
 	private World respawnWorld;
 	private Location spawn;
@@ -82,12 +73,7 @@ public class LobbyWorld {
 	private List<String> worldDescription = new ArrayList<String>();
 	private String saveName;
 	
-	private boolean isHidden = false;
-
-	private boolean loadedFromConfig;
 	private boolean isLobby = false;
-	
-	private String displayName;
 	
 	public void setNether(World nether) {
 		this.nether = nether;
@@ -109,15 +95,6 @@ public class LobbyWorld {
 		portalLocations = loc;
 	}
 	
-	
-	
-	
-	public void setDisplayName(String display) {
-		this.displayName = display;
-	}
-	public String getDisplayName() {
-		return displayName;
-	}
 	
 	
 	/**
@@ -193,12 +170,8 @@ public class LobbyWorld {
 
 	public LobbyWorld(boolean loadedFC, String worldname, int ID, int amount,
 			short color, Location spawn, String saveName, GameMode gm) {
-		this.loadedFromConfig = loadedFC;
-		this.worldname = worldname;
+		super(loadedFC, worldname, ID, amount, color);
 		this.mainWorld = Bukkit.getWorld(worldname);
-		this.ID = ID;
-		this.amount = amount;
-		this.color = color;
 		this.spawn = spawn;
 		this.saveName = saveName;
 		this.gamemode = gm;
@@ -262,40 +235,8 @@ public class LobbyWorld {
 		return this.isLobby;
 	}
 	
-	public boolean isHidden(){
-		return this.isHidden;
-	}
-	public void setHidden(boolean b){
-		this.isHidden = b;
-	}
-
-	public boolean loadedFromConfig() {
-		return this.loadedFromConfig;
-	}
-
 	public String getWorldName() {
-		return worldname;
-	}
-
-	public int getSlot() {
-		return ID;
-	}
-	
-	public void setSlot(int slot) {
-		this.ID = slot;
-	}
-	
-
-	public int getSlotAmount() {
-		return amount;
-	}
-
-	public short getColor() {
-		return color;
-	}
-
-	public Material getMaterial() {
-		return this.material;
+		return getName();
 	}
 
 	public World getRespawnWorld() {
@@ -303,12 +244,11 @@ public class LobbyWorld {
 	}
 
 	public Location getSpawn() {
-
         if(spawn.getWorld() == null){
-        	spawn.setWorld(Bukkit.getWorld(this.worldname));
+        	spawn.setWorld(Bukkit.getWorld(this.getName()));
         	if(spawn.getWorld()==null){
             //Loads a world with the name given in the constructor
-            WorldCreator wc = new WorldCreator(this.worldname);
+            WorldCreator wc = new WorldCreator(this.getName());
             Bukkit.createWorld(wc);
         	}
 
@@ -398,18 +338,6 @@ public class LobbyWorld {
 
 	public GameMode getGameMode() {
 		return this.gamemode;
-	}
-
-	public void setSlotAmount(int i) {
-		amount = i;
-	}
-
-	public void setColor(short s) {
-		color = s;
-	}
-
-	public void setMaterial(Material m) {
-		this.material = m;
 	}
 
 	public void setRespawnWorld(World world) {

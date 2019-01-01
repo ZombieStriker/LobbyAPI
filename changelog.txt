@@ -1,3 +1,13 @@
+3.7.82
+	Added the ability to check player count for players on other servers.
+
+3.7.81
+	Fixed NPE for unregister world location savings
+
+3.7.80
+	Refactored classes so icons are their own object. Makes adding more icons easier
+	Removed the hasBungee tag. Now servers will be added automatically.
+
 3.7.79
 	Added support for multiple portals per world.
 

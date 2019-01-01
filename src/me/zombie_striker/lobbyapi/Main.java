@@ -15,8 +15,6 @@
  */
 package me.zombie_striker.lobbyapi;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -25,7 +23,6 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import me.zombie_striker.lobbyapi.LobbyWorld.WeatherState;
 import me.zombie_striker.lobbyapi.utils.*;
-import me.zombie_striker.pluginconstructor.GithubUpdater;
 import me.zombie_striker.lobbyapi.utils.ConfigHandler.ConfigKeys;
 
 import org.bukkit.*;
@@ -49,6 +46,9 @@ import org.bukkit.potion.*;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
+
 public class Main extends JavaPlugin implements Listener {
 
 	private HashMap<String, World> lastWorld = new HashMap<String, World>();
@@ -62,8 +62,6 @@ public class Main extends JavaPlugin implements Listener {
 
 	@SuppressWarnings("unused")
 	private LobbyAPI la = new LobbyAPI(this);
-
-	public boolean hasBungee = false;
 
 	private boolean enablePWI = true;
 
@@ -175,11 +173,9 @@ public class Main extends JavaPlugin implements Listener {
 			}
 		}.runTaskTimer(this, 0, 10 * 20L);
 		if (getConfig() != null && getConfig().contains("hasBungee") && getConfig().getBoolean("hasBungee")) {
-			hasBungee = true;
 			getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
 			getServer().getConsoleSender().sendMessage(prefix + ChatColor.GREEN + "Bungee For LobbyAPI is enabled");
 		} else {
-			hasBungee = false;
 			getServer().getConsoleSender().sendMessage(prefix + ChatColor.DARK_RED + "Bungee For LobbyAPI is disabled");
 		}
 		loadLocalWorlds();
@@ -216,6 +212,8 @@ public class Main extends JavaPlugin implements Listener {
 			getConfig().set("Version", this.getDescription().getVersion());
 			saveConfig();
 		}
+		
+	    this.getServer().getMessenger().registerIncomingPluginChannel(this, "BungeeCord", new BungeeMessager());
 
 		/*
 		 * new BukkitRunnable() { public void run() { // TODO: Works well. Make changes
@@ -287,6 +285,7 @@ public class Main extends JavaPlugin implements Listener {
 
 	@EventHandler
 	private void onPlayerLeave(PlayerQuitEvent event) {
+		LobbyAPI.updateServerCount(event.getPlayer());
 		LobbyWorld lw = LobbyAPI.getLobbyWorld(event.getPlayer().getWorld());
 		if (lw != null) {
 			if (lw.shouldWorldShouldSavePlayerLocation())
@@ -345,6 +344,7 @@ public class Main extends JavaPlugin implements Listener {
 	@EventHandler
 	private void onPlayeJoin(final PlayerJoinEvent event) {
 		World goingTo = event.getPlayer().getWorld();
+		LobbyAPI.updateServerCount(event.getPlayer());
 		if (LobbyWorld.getMainLobby() != null) {
 			goingTo = LobbyWorld.getMainLobby().getMainWorld();
 			new BukkitRunnable() {
@@ -379,11 +379,11 @@ public class Main extends JavaPlugin implements Listener {
 				temp.setWorld(curr.getEnd());
 			} else {
 				if (event.getFrom().getWorld().getEnvironment() == Environment.THE_END) {
-					temp = new Location(curr.getEnd(), 0,100,0);
+					temp = new Location(curr.getEnd(), 0, 100, 0);
 				} else {
 					temp = curr.getSpawn();
 				}
-				
+
 			}
 			event.setTo(temp);
 		} else if (event.getTo().getWorld() == Bukkit.getWorlds().get(1)) {
@@ -437,11 +437,11 @@ public class Main extends JavaPlugin implements Listener {
 				temp.setWorld(curr.getEnd());
 			} else {
 				if (event.getFrom().getWorld().getEnvironment() == Environment.THE_END) {
-					temp = new Location(curr.getEnd(), 0,100,0);
+					temp = new Location(curr.getEnd(), 0, 100, 0);
 				} else {
 					temp = curr.getSpawn();
 				}
-				
+
 			}
 			event.setTo(temp);
 		} else if (event.getCause() == TeleportCause.NETHER_PORTAL) {
@@ -747,11 +747,10 @@ public class Main extends JavaPlugin implements Listener {
 	}
 
 	private void teleportBungee(Player p, String to) {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		DataOutputStream dos = new DataOutputStream(baos);
+		ByteArrayDataOutput baos = ByteStreams.newDataOutput();
 		try {
-			dos.writeUTF("Connect");
-			dos.writeUTF(to);
+			baos.writeUTF("Connect");
+			baos.writeUTF(to);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -833,23 +832,26 @@ public class Main extends JavaPlugin implements Listener {
 	}
 
 	private void setLastLocationForWorld(Player p, LobbyWorld lw, Location newLoc) {
-		if (lw.shouldWorldShouldSavePlayerLocation()) {
-			File tempHolder = new File(getDataFolder() + File.separator + "playerfiles",
-					p.getUniqueId().toString() + ".yml");
-			if (!tempHolder.getParentFile().exists())
-				tempHolder.getParentFile().mkdirs();
-			if (!tempHolder.exists())
+		if (lw != null) {
+			if (lw.shouldWorldShouldSavePlayerLocation()) {
+				File tempHolder = new File(getDataFolder() + File.separator + "playerfiles",
+						p.getUniqueId().toString() + ".yml");
+				if (!tempHolder.getParentFile().exists())
+					tempHolder.getParentFile().mkdirs();
+				if (!tempHolder.exists())
+					try {
+						tempHolder.createNewFile();
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
+				FileConfiguration config = org.bukkit.configuration.file.YamlConfiguration
+						.loadConfiguration(tempHolder);
+				config.set(p.getName() + "." + lw.getWorldName() + ".LastLocation", newLoc);
 				try {
-					tempHolder.createNewFile();
-				} catch (IOException e1) {
-					e1.printStackTrace();
+					config.save(tempHolder);
+				} catch (IOException e) {
+					e.printStackTrace();
 				}
-			FileConfiguration config = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(tempHolder);
-			config.set(p.getName() + "." + lw.getWorldName() + ".LastLocation", newLoc);
-			try {
-				config.save(tempHolder);
-			} catch (IOException e) {
-				e.printStackTrace();
 			}
 		}
 	}
@@ -1221,7 +1223,7 @@ public class Main extends JavaPlugin implements Listener {
 							server.setMaterial(
 									Material.matchMaterial(getConfig().getString("Server." + fi + ".material")));
 						if (getConfig().contains("Server." + fi + ".displayname"))
-							server.setDisplayname(ChatColor.translateAlternateColorCodes('&',
+							server.setDisplayName(ChatColor.translateAlternateColorCodes('&',
 									getConfig().getString("Server." + fi + ".displayname")));
 						if (getConfig().contains("Server." + fi + ".lore"))
 							server.setLore(getConfig().getStringList("Server." + fi + ".lore"));

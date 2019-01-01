@@ -15,88 +15,19 @@
  */
 package me.zombie_striker.lobbyapi;
 
-import java.util.ArrayList;
-import java.util.List;
+public class LobbyServer extends LobbyIcon {
 
-import org.bukkit.Material;
-
-public class LobbyServer {
-
-	private String servername;
-	private int ID;
-
-	private String displayname;
-	private List<String> lore = new ArrayList<>();
-
-	private int amount = 1;
-	private short color;
-	private Material material = Material.GLASS;
-
-	private boolean isHidden = false;
-
-	private boolean loadedFromConfig;
+	int playerCount = 0;
 
 	public LobbyServer(boolean loadedFC, String servername, int ID, int amount, short color) {
-		this.loadedFromConfig = loadedFC;
-		this.servername = servername;
-		this.ID = ID;
-		this.amount = amount;
-		this.color = color;
+		super(loadedFC, servername, ID, amount, color);
 	}
 
-	public void setHidden(boolean b) {
-		this.isHidden = b;
+	public void setPlayerCount(int a) {
+		this.playerCount = a;
 	}
 
-	public boolean isHidden() {
-		return this.isHidden;
-	}
-
-	public boolean loadedFromConfig() {
-		return this.loadedFromConfig;
-	}
-
-	public int getSlot() {
-		return this.ID;
-	}
-
-	public String getName() {
-		return this.servername;
-	}
-
-	public short getColor() {
-		return this.color;
-	}
-
-	public Material getMaterial() {
-		return this.material;
-	}
-
-	public int getAmount() {
-		return this.amount;
-	}
-
-	public void setAmount(int amount) {
-		this.amount = amount;
-	}
-
-	public void setMaterial(Material m) {
-		this.material = m;
-	}
-
-	public void setLore(List<String> lore) {
-		this.lore = lore;
-	}
-
-	public List<String> getLore() {
-		return lore;
-	}
-
-	public void setDisplayname(String displayname) {
-		this.displayname = displayname;
-	}
-
-	public String getDisplayname() {
-		return displayname;
+	public int getPlayerCount() {
+		return playerCount;
 	}
 }
