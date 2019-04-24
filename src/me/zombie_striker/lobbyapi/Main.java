@@ -212,8 +212,8 @@ public class Main extends JavaPlugin implements Listener {
 			getConfig().set("Version", this.getDescription().getVersion());
 			saveConfig();
 		}
-		
-	    this.getServer().getMessenger().registerIncomingPluginChannel(this, "BungeeCord", new BungeeMessager());
+
+		this.getServer().getMessenger().registerIncomingPluginChannel(this, "BungeeCord", new BungeeMessager());
 
 		/*
 		 * new BukkitRunnable() { public void run() { // TODO: Works well. Make changes
@@ -276,6 +276,7 @@ public class Main extends JavaPlugin implements Listener {
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	@EventHandler
 	public void onClose(InventoryCloseEvent e) {
 		if (e.getInventory().getTitle().equals("Ender Chest")) {
@@ -617,6 +618,7 @@ public class Main extends JavaPlugin implements Listener {
 		}.runTaskLater(this, 5);
 	}
 
+	@SuppressWarnings("deprecation")
 	@EventHandler
 	public void onSelect(InventoryClickEvent event) {
 		if (event.getInventory() == null)
@@ -654,9 +656,14 @@ public class Main extends JavaPlugin implements Listener {
 							if (wo == null)
 								continue;
 							if (wo.getSlot() == event.getSlot() && !wo.isHidden()) {
+								int playersize = wo.getPlayers().size();
+								if(wo.getNether()!=null)
+									playersize+=(wo.getNether().getPlayers().size());
+								if(wo.getEnd()!=null)
+									playersize+=(wo.getEnd().getPlayers().size());
+								
 								if (!event.getWhoClicked().hasPermission("lobbyapi.bypassworldlimits")
-										&& (wo.hasMaxPlayers() && getServer().getWorld(wo.getWorldName()).getPlayers()
-												.size() < wo.getMaxPlayers())) {
+										&& (wo.hasMaxPlayers() && playersize >= wo.getMaxPlayers())) {
 									event.getWhoClicked()
 											.sendMessage(ChatColor.RED + "This world is full, please try again later.");
 								} else if (!event.getWhoClicked().hasPermission("lobbyapi.bypassworldlimits")
@@ -689,8 +696,13 @@ public class Main extends JavaPlugin implements Listener {
 										e.getPlayer().teleport(e.getDestination());
 
 										StringBuilder playersOnline = new StringBuilder();
-										Object[] oo = wo.getPlayers().toArray();
-										for (int i = 0; i < (wo.getPlayers().size() < 6 ? wo.getPlayers().size()
+										Set<Player> players = wo.getPlayers();
+										if(lw.getNether()!=null)
+											players.addAll(lw.getNether().getPlayers());
+										if(lw.getEnd()!=null)
+											players.addAll(lw.getEnd().getPlayers());
+										Object[] oo = players.toArray();
+										for (int i = 0; i < (oo.length < 6 ? oo.length
 												: 7); i++)
 											playersOnline
 													.append(((Player) oo[i]).getDisplayName()
@@ -821,7 +833,7 @@ public class Main extends JavaPlugin implements Listener {
 					e1.printStackTrace();
 				}
 			FileConfiguration config = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(tempHolder);
-			Location loc = (Location) config.get(p.getName() + "." + lw.getWorldName() + ".LastLocation");
+			Location loc = (Location) config.get(p.getName() + "." + lw.getSaveName() + ".LastLocation");
 			return loc;
 		}
 		return null;
@@ -846,7 +858,7 @@ public class Main extends JavaPlugin implements Listener {
 					}
 				FileConfiguration config = org.bukkit.configuration.file.YamlConfiguration
 						.loadConfiguration(tempHolder);
-				config.set(p.getName() + "." + lw.getWorldName() + ".LastLocation", newLoc);
+				config.set(p.getName() + "." + lw.getSaveName() + ".LastLocation", newLoc);
 				try {
 					config.save(tempHolder);
 				} catch (IOException e) {
@@ -1119,6 +1131,11 @@ public class Main extends JavaPlugin implements Listener {
 									? getConfig().getBoolean("Worlds." + name + ".hidden")
 									: false;
 							lw.setHidden(hidden);
+
+							int maxplayers = getConfig().contains("Worlds." + name + ".maxPlayers")
+									? getConfig().getInt("Worlds." + name + ".maxPlayers")
+									: -1;
+							lw.setMaxPlayers(maxplayers >= 0, maxplayers);
 
 							boolean locsaving = getConfig().contains("Worlds." + name + ".shouldsavelocation")
 									? getConfig().getBoolean("Worlds." + name + ".shouldsavelocation")

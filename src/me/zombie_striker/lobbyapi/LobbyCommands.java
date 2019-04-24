@@ -18,7 +18,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-
 public class LobbyCommands implements CommandExecutor, TabCompleter {
 
 	private Main m;
@@ -129,10 +128,16 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 				} else if (b(args[0], "ChangeSpawn", "addJoiningCommand", "ListJoiningCommands", "setDescription",
 						"RemoveWorld", "SetMainLobby", "AddDefaultItem", "changeWorldSlot", "RemoveDefaultItem",
 						"ListDefaultItems", "goto", "listwhitelist", "addTowhitelist", "removefromwhitelist",
-						"togglewhitelist", "generateNetherAndEndFor")) {
+						"togglewhitelist", "generateNetherAndEndFor", "setmaxplayers", "setsavename")) {
 					if (args.length == 2) {
 						bLW(tab, args[1]);
 					}
+
+				} else if (b(args[0], "setsavename")) {
+					if (args.length == 2)
+						for (LobbyWorld lw : LobbyAPI.getWorlds())
+							if (!tab.contains(lw.getSaveName()))
+								tab.add(lw.getSaveName());
 				} else if (b(args[0], "setDisplayName")) {
 					if (args.length == 2) {
 						bLW(tab, args[1]);
@@ -299,22 +304,75 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					sender.sendMessage(prefix
 							+ " [world] = '~' for the world you are in or the world's name (it is Case Sensitive)");
 				}
+			} else if (args[0].equalsIgnoreCase("setmaxplayers")) {
+				if (args.length >= 3) {
+					LobbyWorld lw = gLW(sender, args[1]);
+					if (lw == null)
+						return false;
+					int maxamount = -1;
+					try {
+						maxamount = Integer.parseInt(args[2]);
+					} catch (Error | Exception e4) {
+
+					}
+					m.getConfig().set("Worlds." + lw.getWorldName() + ".maxPlayers", maxamount);
+					lw.setMaxPlayers(maxamount >= 0, maxamount);
+
+					m.saveConfig();
+					sender.sendMessage(
+							prefix + "Max players " + (maxamount <= 0 ? "disabled" : "set to " + maxamount) + ".");
+
+				} else {
+					sender.sendMessage(
+							prefix + " Usage:" + ChatColor.BOLD + " /LobbyAPI setmaxplayers [world] [max-amount]");
+					sender.sendMessage(
+							prefix + " [world] = '~' for the world you want to go toe (it is Case Sensitive)");
+					sender.sendMessage(prefix + " [max-amount] = The max players for that world (-1 to remove limit).");
+				}
+			} else if (args[0].equalsIgnoreCase("setSaveName")) {
+				if (args.length >= 3) {
+					LobbyWorld lw = gLW(sender, args[1]);
+					if (lw == null)
+						return false;
+					String save = args[2];
+					m.getConfig().set("Worlds." + lw.getWorldName() + ".save", save);
+					lw.setSaveName(save);
+
+					m.saveConfig();
+					sender.sendMessage(prefix + "Save name changed to \"" + save + "\".");
+					sender.sendMessage(prefix
+							+ "(If you have any worlds connected to this world, like a nether or end, you will need to change the savename for those worlds as well.)");
+
+				} else {
+					sender.sendMessage(
+							prefix + " Usage:" + ChatColor.BOLD + " /LobbyAPI setmaxplayers [world] [max-amount]");
+					sender.sendMessage(
+							prefix + " [world] = '~' for the world you want to go toe (it is Case Sensitive)");
+					sender.sendMessage(prefix + " [save-name] = The the savename that will be used.");
+				}
 			} else if (args[0].equalsIgnoreCase("goto")) {
 				if (args.length >= 2) {
 					LobbyWorld lw = gLW(sender, args[1]);
 					if (lw == null)
 						return false;
-					if (sender instanceof Player) {
-						Player p = (Player) sender;
-						p.teleport(lw.getSpawn());
+					Player who = null;
+					if (args.length >= 3) {
+						who = Bukkit.getPlayer(args[2]);
+					} else {
+						who = (Player) sender;
+					}
+					if (who != null) {
+						who.teleport(lw.getSpawn());
 						sender.sendMessage(prefix + " Teleporting to " + lw.getWorldName() + "'s spawn...");
 					} else {
-						sender.sendMessage(prefix + " Only players can send this command.");
+						sender.sendMessage(prefix + " Please provide a valid username.");
 					}
 				} else {
-					sender.sendMessage(prefix + " Usage:" + ChatColor.BOLD + " /LobbyAPI goto [world]");
+					sender.sendMessage(prefix + " Usage:" + ChatColor.BOLD + " /LobbyAPI goto [world] [player]");
 					sender.sendMessage(
 							prefix + " [world] = '~' for the world you want to go toe (it is Case Sensitive)");
+					sender.sendMessage(prefix
+							+ " [player] = [OPTIONAL]: The name of the player to teleport (if not specified, sender will be teleported)");
 				}
 			} else if (args[0].equalsIgnoreCase("addDecor")) {
 				if (args.length >= 4) {
@@ -1236,20 +1294,22 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 				}
 			} else if (args.length > 0 && args[0].equalsIgnoreCase("listWorlds")) {
 				sender.sendMessage(prefix + " Worlds that have been added via command");
-				for (String fi : m.getConfig().getConfigurationSection("Worlds").getKeys(false)) {
-					if (m.getConfig().getString("Worlds." + fi + ".name") != null) {
-						sender.sendMessage(prefix + " Savename=" + fi + ": World="
-								+ m.getConfig().getString("Worlds." + fi + ".name"));
+				if (m.getConfig().contains("Worlds"))
+					for (String fi : m.getConfig().getConfigurationSection("Worlds").getKeys(false)) {
+						if (m.getConfig().getString("Worlds." + fi + ".name") != null) {
+							sender.sendMessage(prefix + " Savename=" + fi + ": World="
+									+ m.getConfig().getString("Worlds." + fi + ".name"));
+						}
 					}
-				}
 			} else if (args.length > 0 && args[0].equalsIgnoreCase("listServers")) {
 				sender.sendMessage(prefix + " Servers that have been added via command");
-				for (String fi : m.getConfig().getConfigurationSection("Server").getKeys(false)) {
-					if (m.getConfig().getString("Server." + fi + ".name") != null) {
-						sender.sendMessage(prefix + " " + fi + ": Server "
-								+ m.getConfig().getString("Server." + fi + ".name") + ".");
+				if (m.getConfig().contains("Server"))
+					for (String fi : m.getConfig().getConfigurationSection("Server").getKeys(false)) {
+						if (m.getConfig().getString("Server." + fi + ".name") != null) {
+							sender.sendMessage(prefix + " " + fi + ": Server "
+									+ m.getConfig().getString("Server." + fi + ".name") + ".");
+						}
 					}
-				}
 			} else {
 				int page = 0;
 				if (args.length > 1) {
@@ -1302,6 +1362,10 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 							ls.add(ChatColor.BOLD + "" + ChatColor.YELLOW + "Main World");
 						ls.addAll(wo.getDescription());
 						Set<Player> players = wo.getPlayers();
+						if(wo.getNether()!=null)
+							players.addAll(wo.getNether().getPlayers());
+						if(wo.getEnd()!=null)
+							players.addAll(wo.getEnd().getPlayers());
 
 						String players2 = ChatColor.GOLD + "" + players.size() + " Players ";
 						if (wo.hasMaxPlayers()) {
@@ -1354,7 +1418,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 						ls.add(ChatColor.RED + "" + ChatColor.GREEN + ChatColor.GOLD + "BungeeCord Server");
 
 						ls.addAll(lb.getLore());
-						
+
 						LobbyAPI.updateServerCount(player, lb);
 
 						String players2 = ChatColor.GOLD + "" + lb.getPlayerCount() + " Players ";
@@ -1379,6 +1443,8 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 		usages.put("removeWorld", "Removes a world from the list");
 		usages.put("listWorlds", "Lists all the worlds added");
 		usages.put("generateNetherAndEndFor", "Generates a nether and end world for the world");
+		usages.put("setsavename", "Sets the save name for a world");
+		usages.put("setmaxplayers", "Sets the maximum players for a world");
 		// usages.put("Worlds", "Shows all stats of worlds");
 
 		usages.put("setMainLobby", "Changes the default spawn world");
@@ -1500,6 +1566,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 		m.getConfig().set("Worlds." + wo.getName() + "." + ConfigKeys.isHidden.s, hidden);
 		m.getConfig().set("Worlds." + wo.getName() + ".canuseportals", canUsePortals);
 		m.getConfig().set("Worlds." + wo.getName() + ".connectedTo", connectedTo);
+		m.getConfig().set("Worlds." + wo.getName() + ".maxPlayers", -1);
 
 		m.saveConfig();
 	}

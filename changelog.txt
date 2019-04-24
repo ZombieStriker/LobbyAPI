@@ -1,3 +1,15 @@
+3.7.84
+	Made it so player counts include all of the players in the end and nether
+	Fixed setMaxPlayers so that the correct message is displayed.
+
+3.7.83
+	Added /lobbyapi setSaveName to change the save name of existing worlds
+	Added /lobbyapi setMaxPlayers to change the max players for a world.
+	Fixed LastLocation saving so it saves the last location relative to the save-name, and not the individual world name. This means that if you logged off in the nether, you will be teleported back to the nether when you try to go to one of their worlds (e.g. the overword)
+
+3.7.82B
+	Fixed nether ports if world is not generated
+
 3.7.82
 	Added the ability to check player count for players on other servers.
 
