@@ -232,6 +232,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 
 	@SuppressWarnings("deprecation")
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
+		
 		if (cmd.getName().equalsIgnoreCase("lobbyapi")) {
 			if (args.length > 0 && args[0].equalsIgnoreCase("version")) {
 				sender.sendMessage(prefix + " Current version :" + ChatColor.GRAY + m.getDescription().getVersion());
@@ -289,7 +290,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 								items = new ArrayList<>();
 							items.add(p.getItemInHand());
 							lw.setSpawnItems(items);
-							ConfigHandler.setWorldVariable(lw, ConfigKeys.DefaultItems.s, items);
+							ConfigHandler.setWorldVariable(lw, ConfigKeys.DefaultItems, items);
 							sender.sendMessage(prefix + " Added the item " + (items.size() - 1) + " = "
 									+ p.getItemInHand().getType().name() + ":" + p.getItemInHand().getDurability());
 
@@ -602,7 +603,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 							+ lw.getSpawnItems().get(index).getDurability());
 					items.remove(index);
 					lw.setSpawnItems(items);
-					ConfigHandler.setWorldVariable(lw, ConfigKeys.DefaultItems.s, items);
+					ConfigHandler.setWorldVariable(lw, ConfigKeys.DefaultItems, items);
 				} else {
 					sender.sendMessage(prefix + " Usage:" + ChatColor.BOLD + " /LobbyAPI addDefaultItem [world]");
 					sender.sendMessage(prefix
@@ -724,17 +725,18 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 							return true;
 						}
 					} else {
-						wo = m.getServer().getWorld(args[1]);
+						String name = args[1].toLowerCase();
+						wo = m.getServer().getWorld(name);
 						if (wo == null) {
 							sender.sendMessage(prefix
 									+ " This world does not exist. Creating world using LobbyAPI WorldGenerator");
-							WorldCreator wc = new WorldCreator(args[1]);
+							WorldCreator wc = new WorldCreator(name);
 							if (args.length >= 9) {
 								wc.seed(Long.parseLong(args[8]));
 							}
 
 							wo = Bukkit.createWorld(wc);
-							ConfigHandler.setCustomWorldValue(wo.getName(), ConfigKeys.CustomAddedWorlds_Seed.s,
+							ConfigHandler.setWorldVariable(wo.getName(), ConfigKeys.CustomAddedWorlds_Seed,
 									wo.getSeed());
 						}
 					}
@@ -823,13 +825,13 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 			} else if (args[0].equalsIgnoreCase("removeWorldSelector")) {
 				m.setWorldSelector(null);
 				sender.sendMessage(prefix + "World selector removed.");
-				ConfigHandler.setLobbyAPIVariable(ConfigHandler.ConfigKeys.WorldSelector.s, null);
+				ConfigHandler.setLobbyAPIVariable(ConfigHandler.ConfigKeys.WorldSelector, null);
 			} else if (args.length > 0 && args[0].equalsIgnoreCase("setWorldSelector")) {
 				if (sender instanceof Player) {
 					Player p = (Player) sender;
 					if (p.getItemInHand() != null) {
 						m.setWorldSelector(p.getItemInHand());
-						ConfigHandler.setLobbyAPIVariable(ConfigHandler.ConfigKeys.WorldSelector.s, p.getItemInHand());
+						ConfigHandler.setLobbyAPIVariable(ConfigHandler.ConfigKeys.WorldSelector, p.getItemInHand());
 						sender.sendMessage(prefix + " World seelector set to item in player's hand");
 					} else {
 						sender.sendMessage(prefix
@@ -855,7 +857,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 						return false;
 					Boolean b = Boolean.parseBoolean(args[2]);
 					lw.setWorldShouldSavePlayerLocation(b);
-					ConfigHandler.setWorldVariable(lw, ConfigHandler.ConfigKeys.ShouldBeSavingLocation.s, b);
+					ConfigHandler.setWorldVariable(lw, ConfigHandler.ConfigKeys.ShouldBeSavingLocation, b);
 					sender.sendMessage(prefix + " Set location saving to " + b);
 				} else {
 					sender.sendMessage(prefix + " Usage:" + ChatColor.BOLD
@@ -1069,7 +1071,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					else
 						z = Double.parseDouble(args[4]);
 
-					Location l = new Location(lw.getMainWorld(), x, y, z);
+					Location l = new Location(lw.getWorld(), x, y, z);
 					if (sender instanceof Player) {
 						l.setYaw(((Player) sender).getLocation().getYaw());
 						l.setPitch(((Player) sender).getLocation().getPitch());
@@ -1105,11 +1107,11 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 						wo = m.getServer().getWorld(args[1]);
 					}
 					if (wo != null) {
-						if (ConfigHandler.getCustomWorldKeys() == null) {
+						if (ConfigHandler.getWorlds() == null) {
 							sender.sendMessage(prefix + "There are no worlds registered!");
 							return true;
 						}
-						if (ConfigHandler.getCustomWorldKeys().contains(wo.getName()) && wo.getPlayers().size() > 0) {
+						if (ConfigHandler.getWorlds().contains(wo.getName()) && wo.getPlayers().size() > 0) {
 							sender.sendMessage(prefix + "There are still " + wo.getPlayers().size()
 									+ " players in that world! There must not be any players in the world when you remove it.");
 							return true;
@@ -1120,7 +1122,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 						LobbyAPI.unregisterWorld(wo);
 						sender.sendMessage(prefix + "Removed world \"" + wo.getName() + "\"");
 						m.loadLocalWorlds();
-						ConfigHandler.setCustomWorldValue(wo.getName(), ConfigKeys.CustomAddedWorlds_Seed.s, null);
+						//ConfigHandler.setWorldVariable(wo.getName(), ConfigKeys.CustomAddedWorlds_Seed, null);
 						Bukkit.unloadWorld(wo, true);
 
 					} else {
@@ -1137,7 +1139,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 						return false;
 					boolean b = Boolean.parseBoolean(args[2]);
 					lw.setPortal(b);
-					ConfigHandler.setWorldVariable(lw, ConfigKeys.CanUsePortals.s, b);
+					ConfigHandler.setWorldVariable(lw, ConfigKeys.CanUsePortals, b);
 					sender.sendMessage(
 							prefix + "Set the CanUsePortals for world \"" + lw.getWorldName() + "\" to " + b + "");
 				} else {
@@ -1155,7 +1157,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 						return false;
 					boolean b = Boolean.parseBoolean(args[2]);
 					lw.setDisableHungerAndHealth(b);
-					ConfigHandler.setWorldVariable(lw, ConfigKeys.DisableHealthAndHunger.s, b);
+					ConfigHandler.setWorldVariable(lw, ConfigKeys.DisableHealthAndHunger, b);
 					sender.sendMessage(prefix + "Set the DisableHealthAndHunger for world \"" + lw.getWorldName()
 							+ "\" to " + b + "");
 				} else {
@@ -1172,7 +1174,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 						return false;
 					boolean b = Boolean.parseBoolean(args[2]);
 					lw.setVoidDisable(b);
-					ConfigHandler.setWorldVariable(lw, ConfigKeys.DisableVoid.s, b);
+					ConfigHandler.setWorldVariable(lw, ConfigKeys.DisableVoid, b);
 					sender.sendMessage(
 							prefix + "Set the DisableVoid for world \"" + lw.getWorldName() + "\" to " + b + "");
 				} else {
@@ -1188,7 +1190,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					if (lw == null)
 						return false;
 					lw.setHidden(true);
-					ConfigHandler.setWorldVariable(lw, ConfigKeys.isHidden.s, true);
+					ConfigHandler.setWorldVariable(lw, ConfigKeys.isHidden, true);
 					sender.sendMessage(prefix + "Hidding world \"" + lw.getWorldName());
 				} else {
 					sender.sendMessage(
@@ -1203,7 +1205,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					if (lw == null)
 						return false;
 					lw.setHidden(false);
-					ConfigHandler.setWorldVariable(lw, ConfigKeys.isHidden.s, false);
+					ConfigHandler.setWorldVariable(lw, ConfigKeys.isHidden, false);
 					sender.sendMessage(prefix + "Showing world \"" + lw.getWorldName());
 				} else {
 					sender.sendMessage(
@@ -1225,7 +1227,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					}
 
 					lw.setWeatherState(ws);
-					ConfigHandler.setWorldVariable(lw, ConfigKeys.Weather.s, ws.name());
+					ConfigHandler.setWorldVariable(lw, ConfigKeys.Weather, ws.name());
 					sender.sendMessage(prefix + "Set the default weather for world \"" + lw.getWorldName() + "\" to "
 							+ ws.name() + "");
 				} else {
@@ -1350,7 +1352,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 
 				m.setInventorySize(false);
 				m.inventory = m.getServer().createInventory(null, m.inventorySize,
-						ChatColor.GOLD + "LobbyAPI " + ChatColor.WHITE + "- World selector");
+						m.title);
 
 				for (LobbyWorld wo : m.worlds) {
 					if (wo != null) {
@@ -1383,7 +1385,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 						if (!wo.isPrivate() || players.contains(player)) {
 							ItemStack is = LobbyAPI.setName(wo.getDisplayName(), wo.getColor(), wo.getMaterial(), ls);
 							is.setAmount(wo.getAmount());
-							if (player.getWorld().equals(wo.getMainWorld())) {
+							if (player.getWorld().equals(wo.getWorld())) {
 								try {
 									// me.zombie_striker.pluginconstructor.InWorldGlowEnchantment pps = new
 									// me.zombie_striker.pluginconstructor.InWorldGlowEnchantment(
@@ -1491,17 +1493,17 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 	}
 
 	public void generateConnctingWorlds(LobbyWorld mainWorld) {
-		World wo = mainWorld.getMainWorld();
+		World wo = mainWorld.getWorld();
 		World nether = Bukkit.getWorld(wo.getName() + "_nether");
 		World end = Bukkit.getWorld(wo.getName() + "_the_end");
 		if (nether == null) {
 			Bukkit.createWorld(new WorldCreator(wo.getName() + "_nether").environment(Environment.NETHER)
-					.generator(Bukkit.getWorlds().get(1).getGenerator()).seed(mainWorld.getMainWorld().getSeed()));
+					.generator(Bukkit.getWorlds().get(1).getGenerator()).seed(mainWorld.getWorld().getSeed()));
 			nether = Bukkit.getWorld(wo.getName() + "_nether");
 		}
 		if (end == null) {
 			Bukkit.createWorld(new WorldCreator(wo.getName() + "_the_end").environment(Environment.THE_END)
-					.generator(Bukkit.getWorlds().get(2).getGenerator()).seed(mainWorld.getMainWorld().getSeed()));
+					.generator(Bukkit.getWorlds().get(2).getGenerator()).seed(mainWorld.getWorld().getSeed()));
 			end = Bukkit.getWorld(wo.getName() + "_the_end");
 		}
 		int netherid = LobbyAPI.getOpenSlot(10);
@@ -1523,13 +1525,13 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 		n.setNether(wo);
 		e.setEnd(wo);
 		mainWorld.setPortal(true);
-		m.getConfig().set("Worlds." + wo.getName() + "." + ConfigKeys.CanUsePortals.s, true);
-		m.getConfig().set("Worlds." + nether.getName() + "." + ConfigKeys.WORLDENVIROMENT.s, Environment.NETHER.name());
-		m.getConfig().set("Worlds." + end.getName() + "." + ConfigKeys.WORLDENVIROMENT.s, Environment.THE_END.name());
-		m.getConfig().set("Worlds." + wo.getName() + "." + ConfigKeys.LINKED_NETHER.s, nether.getName());
-		m.getConfig().set("Worlds." + nether.getName() + "." + ConfigKeys.LINKED_NETHER.s, wo.getName());
-		m.getConfig().set("Worlds." + wo.getName() + "." + ConfigKeys.LINKED_END.s, end.getName());
-		m.getConfig().set("Worlds." + end.getName() + "." + ConfigKeys.LINKED_END.s, wo.getName());
+		m.getConfig().set("Worlds." + wo.getName() + "." + ConfigKeys.CanUsePortals, true);
+		m.getConfig().set("Worlds." + nether.getName() + "." + ConfigKeys.WORLDENVIROMENT, Environment.NETHER.name());
+		m.getConfig().set("Worlds." + end.getName() + "." + ConfigKeys.WORLDENVIROMENT, Environment.THE_END.name());
+		m.getConfig().set("Worlds." + wo.getName() + "." + ConfigKeys.LINKED_NETHER, nether.getName());
+		m.getConfig().set("Worlds." + nether.getName() + "." + ConfigKeys.LINKED_NETHER, wo.getName());
+		m.getConfig().set("Worlds." + wo.getName() + "." + ConfigKeys.LINKED_END, end.getName());
+		m.getConfig().set("Worlds." + end.getName() + "." + ConfigKeys.LINKED_END, wo.getName());
 		m.saveConfig();
 	}
 
@@ -1550,7 +1552,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 	public void saveWorld(String savename, World wo, Location l, int color, int i, boolean hidden,
 			boolean canUsePortals, String connectedTo) {
 		m.getConfig().set("Worlds." + wo.getName() + ".name", wo.getName());
-		m.getConfig().set("Worlds." + wo.getName() + ".displayname", wo.getName());
+		//m.getConfig().set("Worlds." + wo.getName() + ".displayname", wo.getName());
 		m.getConfig().set("Worlds." + wo.getName() + ".spawnLoc.x", l.getX());
 		m.getConfig().set("Worlds." + wo.getName() + ".spawnLoc.y", l.getY());
 		m.getConfig().set("Worlds." + wo.getName() + ".spawnLoc.z", l.getZ());
@@ -1559,14 +1561,19 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 		m.getConfig().set("Worlds." + wo.getName() + ".spawnLoc.w", l.getWorld().getName());
 		m.getConfig().set("Worlds." + wo.getName() + ".weatherstate", WeatherState.NORMAL.name());
 		m.getConfig().set("Worlds." + wo.getName() + ".i", i);
+		if(wo.getName() != savename)
 		m.getConfig().set("Worlds." + wo.getName() + ".save", savename);
-		m.getConfig().set("Worlds." + wo.getName() + ".desc", "");
+		
+		//m.getConfig().set("Worlds." + wo.getName() + ".desc", "");
 		m.getConfig().set("Worlds." + wo.getName() + ".gamemode", GameMode.SURVIVAL.name());
 		m.getConfig().set("Worlds." + wo.getName() + ".color", color);
-		m.getConfig().set("Worlds." + wo.getName() + "." + ConfigKeys.isHidden.s, hidden);
+		m.getConfig().set("Worlds." + wo.getName() + "." + ConfigKeys.isHidden, hidden);
 		m.getConfig().set("Worlds." + wo.getName() + ".canuseportals", canUsePortals);
-		m.getConfig().set("Worlds." + wo.getName() + ".connectedTo", connectedTo);
-		m.getConfig().set("Worlds." + wo.getName() + ".maxPlayers", -1);
+		m.getConfig().set("Worlds." + wo.getName() + ".respawnWorld", connectedTo);
+
+		m.getConfig().set("CustomWorlds." + wo.getName() + "."+ConfigKeys.CustomAddedWorlds_Seed, connectedTo);
+		
+		//m.getConfig().set("Worlds." + wo.getName() + ".maxPlayers", -1);
 
 		m.saveConfig();
 	}

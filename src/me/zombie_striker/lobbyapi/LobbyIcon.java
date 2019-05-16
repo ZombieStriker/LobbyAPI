@@ -36,9 +36,9 @@ public class LobbyIcon {
 
 	private boolean loadedFromConfig;
 
-	public LobbyIcon(boolean loadedFC, String servername, int ID, int amount, short color) {
+	public LobbyIcon(boolean loadedFC, String iconName, int ID, int amount, short color) {
 		this.loadedFromConfig = loadedFC;
-		this.name = servername;
+		this.name = iconName;
 		this.ID = ID;
 		this.amount = amount;
 		this.color = color;

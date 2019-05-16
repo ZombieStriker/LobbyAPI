@@ -30,17 +30,16 @@ import org.bukkit.WorldCreator;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-public class LobbyWorld extends LobbyIcon{
+public class LobbyWorld extends LobbyIcon {
 
 	private static LobbyWorld MAIN_LOBBY = null;
-	
-	public static LobbyWorld getMainLobby(){
-	return MAIN_LOBBY;	
+
+	public static LobbyWorld getMainLobby() {
+		return MAIN_LOBBY;
 	}
 
-	private World respawnWorld;
 	private Location spawn;
-	private boolean canUsePortal=false;
+	private boolean canUsePortal = false;
 	private boolean canUseEnderChest;
 	private boolean isStaticTime;
 	private boolean disableHungerAndHealth;
@@ -52,189 +51,217 @@ public class LobbyWorld extends LobbyIcon{
 	private int maxPlayers;
 
 	private World mainWorld;
-	
+
 	private World nether;
 	private World end;
+	private World respawnWorld;
 
 	private boolean isPrivate;
 	private Set<UUID> allowedPlayersUUID = new HashSet<UUID>();
-	//private Set<String> allowedPlayersString = new HashSet<String>();
-	
-	
+	// private Set<String> allowedPlayersString = new HashSet<String>();
+
 	private List<String> commandsIssed = new ArrayList<>();
-	
+
 	private List<Location> portalLocations = new ArrayList<Location>();
-	
-	private boolean shouldSavePlayerLocation = false;	
+
+	private boolean shouldSavePlayerLocation = false;
 
 	private List<ItemStack> worldItems;
-	private GameMode gamemode=null;
+	private GameMode gamemode = null;
 
 	private List<String> worldDescription = new ArrayList<String>();
 	private String saveName;
-	
+
 	private boolean isLobby = false;
-	
+
 	public void setNether(World nether) {
 		this.nether = nether;
 	}
+
 	public void setEnd(World end) {
-		this.end =end;
+		this.end = end;
 	}
+
 	public World getNether() {
 		return nether;
 	}
+
 	public World getEnd() {
 		return end;
 	}
-	
-	public List<Location> getPortalLocations(){
+
+	public List<Location> getPortalLocations() {
 		return portalLocations;
 	}
+
 	public void setPortalLocations(List<Location> loc) {
 		portalLocations = loc;
 	}
-	
-	
-	
+
 	/**
 	 * Sets whether a world should save the location of a world.
-	 * @param should save the location for a world
+	 * 
+	 * @param should
+	 *            save the location for a world
 	 * @return
 	 */
-	public void setWorldShouldSavePlayerLocation(boolean b){
+	public void setWorldShouldSavePlayerLocation(boolean b) {
 		this.shouldSavePlayerLocation = b;
 	}
+
 	/**
 	 * Sets whether a world should save the location of a world.
-	 * @param should save the location for a world
+	 * 
+	 * @param should
+	 *            save the location for a world
 	 * @return
 	 */
-	public boolean shouldWorldShouldSavePlayerLocation(){
+	public boolean shouldWorldShouldSavePlayerLocation() {
 		return this.shouldSavePlayerLocation;
 	}
-	
+
 	/**
-	 * Returns if a world has food and health disabled. Useful for worlds where you don't want players to die.
+	 * Returns if a world has food and health disabled. Useful for worlds where you
+	 * don't want players to die.
+	 * 
 	 * @return
 	 */
-	public boolean hasDisabledHungerAndHealth(){
+	public boolean hasDisabledHungerAndHealth() {
 		return disableHungerAndHealth;
 	}
+
 	/**
 	 * Sets if a world will disable food and health
+	 * 
 	 * @param b
 	 */
-	public void setDisableHungerAndHealth(boolean b){
+	public void setDisableHungerAndHealth(boolean b) {
 		this.disableHungerAndHealth = b;
 	}
 
 	/**
 	 * Returns if a world has the void disabled. Useful for lobby worlds
+	 * 
 	 * @return
 	 */
-	public boolean hasVoidDisable(){
+	public boolean hasVoidDisable() {
 		return disableVoidDeath;
 	}
+
 	/**
 	 * Sets if a world will disable food and health
+	 * 
 	 * @param b
 	 */
-	public void setVoidDisable(boolean b){
+	public void setVoidDisable(boolean b) {
 		this.disableVoidDeath = b;
 	}
-	
-	
+
 	/**
-	 * Changes the Main lobby world. 
+	 * Changes the Main lobby world.
+	 * 
 	 * @param lw
 	 */
-	public static void setMainLobby(LobbyWorld lw){
-		MAIN_LOBBY=lw;
+	public static void setMainLobby(LobbyWorld lw) {
+		MAIN_LOBBY = lw;
 	}
+
 	/**
-	 * Sets the Main lobby world to be equal to this world. 
+	 * Sets the Main lobby world to be equal to this world.
+	 * 
 	 * @param lw
 	 */
-	public void setAsMainLobby(){
-		MAIN_LOBBY=this;
+	public void setAsMainLobby() {
+		MAIN_LOBBY = this;
 	}
 
 	/**
 	 * Removes main lobby world.
+	 * 
 	 * @param lw
 	 */
-	public static void removeMainLobby(){
-		MAIN_LOBBY=null;
+	public static void removeMainLobby() {
+		MAIN_LOBBY = null;
 	}
 
-	public LobbyWorld(boolean loadedFC, String worldname, int ID, int amount,
-			short color, Location spawn, String saveName, GameMode gm) {
+	public LobbyWorld(boolean loadedFC, String worldname, int ID, int amount, short color, Location spawn,
+			String saveName, GameMode gm) {
 		super(loadedFC, worldname, ID, amount, color);
-		this.mainWorld = Bukkit.getWorld(worldname);
+		this.mainWorld = Bukkit.getWorld(worldname.toLowerCase());
 		this.spawn = spawn;
 		this.saveName = saveName;
 		this.gamemode = gm;
-		
-		//this.canUsePortal = ((mainWorld!=null&&Bukkit.getWorlds().get(0).equals(mainWorld))||worldname.equals("world_nether"));
+
+		// this.canUsePortal =
+		// ((mainWorld!=null&&Bukkit.getWorlds().get(0).equals(mainWorld))||worldname.equals("world_nether"));
 	}
-	
-	public enum WeatherState{
-		NORMAL(0),NO_RAIN(1),ALWAYS_RAIN(2);
-		
+
+	public enum WeatherState {
+		NORMAL(0), NO_RAIN(1), ALWAYS_RAIN(2);
+
 		int data;
-		private WeatherState(int data){
+
+		private WeatherState(int data) {
 			this.data = data;
 		}
-		public static WeatherState getWeatherStateByName(String name){
-			if(name==null)
+
+		public static WeatherState getWeatherStateByName(String name) {
+			if (name == null)
 				return null;
-			
-			if(name.equalsIgnoreCase("normal"))
+
+			if (name.equalsIgnoreCase("normal"))
 				return NORMAL;
-			if(name.equalsIgnoreCase("always_rain"))
+			if (name.equalsIgnoreCase("always_rain"))
 				return ALWAYS_RAIN;
-			if(name.equalsIgnoreCase("no_rain"))
+			if (name.equalsIgnoreCase("no_rain"))
 				return NO_RAIN;
 			return null;
 		}
-		public String toString(){
-			if(data == 0)
+
+		public String toString() {
+			if (data == 0)
 				return "NORMAL";
-			if(data == 1)
+			if (data == 1)
 				return "NO_RAIN";
-			if(data == 2)
+			if (data == 2)
 				return "ALWAYS_RAIN";
 			return "null";
 		}
-		public int getRawValue(){
+
+		public int getRawValue() {
 			return data;
 		}
-		
+
 	}
-	public void addCommand(String commands){
+
+	public void addCommand(String commands) {
 		this.commandsIssed.add(commands);
 	}
-	public List<String> getCommandsOnJoin(){
+
+	public List<String> getCommandsOnJoin() {
 		return this.commandsIssed;
 	}
-	public void setSaveName(String savename){
+
+	public void setSaveName(String savename) {
 		this.saveName = savename;
 	}
-	public void setWeatherState(WeatherState weatherstate){
+
+	public void setWeatherState(WeatherState weatherstate) {
 		this.weatherState = weatherstate;
 	}
-	public WeatherState getWeatherState(){
+
+	public WeatherState getWeatherState() {
 		return this.weatherState;
 	}
-	
-	public void setLobby(boolean b){
+
+	public void setLobby(boolean b) {
 		this.isLobby = b;
 	}
-	public boolean isLobby(){
+
+	public boolean isLobby() {
 		return this.isLobby;
 	}
-	
+
 	public String getWorldName() {
 		return getName();
 	}
@@ -244,16 +271,16 @@ public class LobbyWorld extends LobbyIcon{
 	}
 
 	public Location getSpawn() {
-        if(spawn.getWorld() == null){
-        	spawn.setWorld(Bukkit.getWorld(this.getName()));
-        	if(spawn.getWorld()==null){
-            //Loads a world with the name given in the constructor
-            WorldCreator wc = new WorldCreator(this.getName());
-            Bukkit.createWorld(wc);
-        	}
+		if (spawn.getWorld() == null) {
+			spawn.setWorld(Bukkit.getWorld(this.getName()));
+			if (spawn.getWorld() == null) {
+				// Loads a world with the name given in the constructor
+				WorldCreator wc = new WorldCreator(this.getName());
+				Bukkit.createWorld(wc);
+			}
 
-        }
-		
+		}
+
 		return spawn;
 	}
 
@@ -280,7 +307,12 @@ public class LobbyWorld extends LobbyIcon{
 		return this.mainWorld != null;
 	}
 
+	@Deprecated
 	public World getMainWorld() {
+		return getWorld();
+	}
+
+	public World getWorld() {
 		return this.mainWorld;
 	}
 
@@ -297,9 +329,9 @@ public class LobbyWorld extends LobbyIcon{
 	public boolean isPrivate() {
 		return isPrivate;
 	}
-	
-	public Set<Player> getPlayers(){
-		return new HashSet<Player>(this.getMainWorld().getPlayers());
+
+	public Set<Player> getPlayers() {
+		return new HashSet<Player>(this.getWorld().getPlayers());
 	}
 
 	public Set<Player> getWhitelistedPlayers() {
@@ -308,15 +340,10 @@ public class LobbyWorld extends LobbyIcon{
 			for (UUID uuid : allowedPlayersUUID) {
 				allowed.add((Player) Bukkit.getOfflinePlayer(uuid));
 			}
-			/*for (String s : allowedPlayersString) {
-				if (!allowed.contains(Bukkit.getOfflinePlayer(s)))
-					allowed.add((Player) Bukkit.getOfflinePlayer(s));
-			}*/
 			return allowed;
 		}
 		return null;
 	}
-
 
 	public Set<UUID> getWhitelistedPlayersUUID() {
 		if (isPrivate()) {
@@ -324,6 +351,7 @@ public class LobbyWorld extends LobbyIcon{
 		}
 		return null;
 	}
+
 	public List<ItemStack> getSpawnItems() {
 		return worldItems;
 	}
@@ -341,7 +369,7 @@ public class LobbyWorld extends LobbyIcon{
 	}
 
 	public void setRespawnWorld(World world) {
-			respawnWorld = world;
+		respawnWorld = world;
 	}
 
 	public void setSpawn(Location l) {
@@ -402,14 +430,16 @@ public class LobbyWorld extends LobbyIcon{
 			allowedPlayersUUID.remove(p.getUniqueId());
 		}
 	}
+
 	public void initWhitelist(List<String> uuids) {
-		for(String u : uuids) {
+		for (String u : uuids) {
 			allowedPlayersUUID.add(UUID.fromString(u));
 		}
 	}
-	public List<String> whitelistToString(){
+
+	public List<String> whitelistToString() {
 		List<String> list = new ArrayList<String>();
-		for(UUID uuid : allowedPlayersUUID) {
+		for (UUID uuid : allowedPlayersUUID) {
 			list.add(uuid.toString());
 		}
 		return list;
