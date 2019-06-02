@@ -15,10 +15,10 @@
  */
 package me.zombie_striker.lobbyapi;
 
+import org.bukkit.Material;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import org.bukkit.Material;
 
 public class LobbyIcon {
 
@@ -44,12 +44,12 @@ public class LobbyIcon {
 		this.color = color;
 	}
 
-	public void setHidden(boolean b) {
-		this.isHidden = b;
-	}
-
 	public boolean isHidden() {
 		return this.isHidden;
+	}
+
+	public void setHidden(boolean b) {
+		this.isHidden = b;
 	}
 
 	public boolean loadedFromConfig() {
@@ -59,7 +59,7 @@ public class LobbyIcon {
 	public int getSlot() {
 		return ID;
 	}
-	
+
 	public void setSlot(int slot) {
 		this.ID = slot;
 	}
@@ -71,12 +71,17 @@ public class LobbyIcon {
 	public short getColor() {
 		return this.color;
 	}
+
 	public void setColor(short color) {
 		this.color = color;
 	}
 
 	public Material getMaterial() {
 		return this.material;
+	}
+
+	public void setMaterial(Material m) {
+		this.material = m;
 	}
 
 	public int getAmount() {
@@ -87,24 +92,20 @@ public class LobbyIcon {
 		this.amount = amount;
 	}
 
-	public void setMaterial(Material m) {
-		this.material = m;
+	public List<String> getLore() {
+		return lore;
 	}
 
 	public void setLore(List<String> lore) {
 		this.lore = lore;
 	}
 
-	public List<String> getLore() {
-		return lore;
+	public String getDisplayName() {
+		return displayname;
 	}
 
 	public void setDisplayName(String displayname) {
 		this.displayname = displayname;
-	}
-
-	public String getDisplayName() {
-		return displayname;
 	}
 
 }

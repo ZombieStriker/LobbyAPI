@@ -1,3 +1,16 @@
+3.7.88
+    Added potion effects, saturation, bedspawns, compass, allowflight, air, and fireticks to the player's data per world.
+    Fixed xp levels not being saved correctly
+    Changed nether/end system to reduce memory since most of the values should be duplicated from the main world.
+    Cleaned up config. It should now be close to half the size as in previous updates
+    Code cleanup
+    Import cleanup
+
+3.7.87
+	Fixed portal XZ offset for nether portals
+	Added "Any" as an option for the default gamemode
+	Fixed issue where gamemodes change across netherportal/endportal teleportation.
+
 3.7.86
 	Fixed 1.13.
 	Fixed portals not giving items for some nether portals

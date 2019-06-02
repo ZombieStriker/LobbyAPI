@@ -23,11 +23,11 @@ public class LobbyServer extends LobbyIcon {
 		super(loadedFC, servername, ID, amount, color);
 	}
 
-	public void setPlayerCount(int a) {
-		this.playerCount = a;
-	}
-
 	public int getPlayerCount() {
 		return playerCount;
+	}
+
+	public void setPlayerCount(int a) {
+		this.playerCount = a;
 	}
 }

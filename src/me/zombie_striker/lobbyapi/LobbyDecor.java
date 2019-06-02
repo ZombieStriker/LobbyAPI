@@ -1,13 +1,13 @@
 package me.zombie_striker.lobbyapi;
 
-import java.util.List;
-
 import org.bukkit.Material;
+
+import java.util.List;
 
 public class LobbyDecor {
 	private int ID;
 
-	private int amount=1;
+	private int amount = 1;
 	//private short color;
 	private Material material = Material.GRASS;
 	private short data = 0;
@@ -22,10 +22,11 @@ public class LobbyDecor {
 		this.displayname = displayname;
 		this.name = name;
 	}
-	
+
 	public short getData() {
 		return data;
 	}
+
 	public void setData(short d) {
 		this.data = d;
 	}

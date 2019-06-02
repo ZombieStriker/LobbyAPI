@@ -15,20 +15,19 @@
  */
 package me.zombie_striker.lobbyapi;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
-
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
 import me.zombie_striker.lobbyapi.LobbyWorld.WeatherState;
-import me.zombie_striker.lobbyapi.utils.*;
+import me.zombie_striker.lobbyapi.utils.ConfigHandler;
 import me.zombie_striker.lobbyapi.utils.ConfigHandler.ConfigKeys;
-
+import me.zombie_striker.lobbyapi.utils.GithubUpdater;
+import me.zombie_striker.lobbyapi.utils.Metrics;
+import me.zombie_striker.lobbyapi.utils.UpdateAnouncer;
 import org.bukkit.*;
 import org.bukkit.World.Environment;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.*;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -40,37 +39,41 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.event.weather.WeatherChangeEvent;
-import org.bukkit.inventory.*;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.potion.*;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
-import com.google.common.io.ByteArrayDataOutput;
-import com.google.common.io.ByteStreams;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Main extends JavaPlugin implements Listener {
 
-	private HashMap<String, World> lastWorld = new HashMap<String, World>();
-	Set<LobbyWorld> worlds = new HashSet<LobbyWorld>();
+	private static String prefix = ChatColor.GOLD + "[" + ChatColor.WHITE + "LobbyAPI" + ChatColor.GOLD + "]"
+			+ ChatColor.WHITE;
 	Set<LobbyServer> bungeeServers = new HashSet<LobbyServer>();
 	Set<LobbyDecor> decor = new HashSet<LobbyDecor>();
 
 	Random random = ThreadLocalRandom.current();
 	int inventorySize = 9;
 	Inventory inventory;
-
+	String title = ChatColor.GOLD + "LobbyAPI " + ChatColor.WHITE + "- World selector";
+	private HashMap<String, World> lastWorld = new HashMap<String, World>();
 	@SuppressWarnings("unused")
 	private LobbyAPI la = new LobbyAPI(this);
-
-	String title = ChatColor.GOLD + "LobbyAPI " + ChatColor.WHITE + "- World selector";
-
 	private boolean enablePWI = true;
-
 	private ItemStack worldSelector = null;
 
-	private static String prefix = ChatColor.GOLD + "[" + ChatColor.WHITE + "LobbyAPI" + ChatColor.GOLD + "]"
-			+ ChatColor.WHITE;
+	public static String getPrefix() {
+		return prefix;
+	}
 
 	@EventHandler
 	public void event(WeatherChangeEvent e) {
@@ -115,15 +118,6 @@ public class Main extends JavaPlugin implements Listener {
 
 		if (getConfig().contains("CustomWorlds")) {
 			try {
-				/*
-				 * for (String w : ConfigHandler.getCustomWorldKeys()) Bukkit.createWorld(new
-				 * WorldCreator(w.toLowerCase())
-				 * .environment(ConfigHandler.containsWorldVariable(w,
-				 * ConfigKeys.WORLDENVIROMENT) ? Environment.valueOf((String)
-				 * ConfigHandler.getWorldVariableObject(w, ConfigKeys.WORLDENVIROMENT)) :
-				 * Environment.NORMAL) .seed(ConfigHandler.getCustomWorldInt(w,
-				 * ConfigKeys.CustomAddedWorlds_Seed)));
-				 */
 				for (String w : getConfig().getConfigurationSection("CustomWorlds").getKeys(false)) {
 					if (getConfig().contains("CustomWorlds." + w + ".Seeds")) {
 						getConfig().set("Worlds." + w + "." + ConfigKeys.CustomAddedWorlds_Seed,
@@ -147,7 +141,7 @@ public class Main extends JavaPlugin implements Listener {
 				 */
 				Environment env = ConfigHandler.containsWorldVariable(name, ConfigKeys.WORLDENVIROMENT)
 						? Environment.valueOf(
-								(String) ConfigHandler.getWorldVariableObject(name, ConfigKeys.WORLDENVIROMENT))
+						(String) ConfigHandler.getWorldVariableObject(name, ConfigKeys.WORLDENVIROMENT))
 						: Environment.NORMAL;
 				WorldCreator wc = new WorldCreator(name.toLowerCase()).environment(env)
 						.seed(ConfigHandler.getWorldVariableInt(name, ConfigKeys.CustomAddedWorlds_Seed));
@@ -170,14 +164,15 @@ public class Main extends JavaPlugin implements Listener {
 		}
 
 		enablePWI = ConfigHandler.getLobbyAPIVariableBoolean(ConfigKeys.ENABLE_PER_WORLD_INVENTORIES);
-
-		if (Bukkit.getPluginManager().getPlugin("Multiverse-Inventories") != null) {
-			Bukkit.getPluginManager().disablePlugin(Bukkit.getPluginManager().getPlugin("Multiverse-Inventories"));
+		Plugin minv = Bukkit.getPluginManager().getPlugin("Multiverse-Inventories");
+		if (minv != null) {
+			Bukkit.getPluginManager().disablePlugin(minv);
 			Bukkit.broadcastMessage(prefix
 					+ " LobbyAPI is incompatible with Multiverse-Inventories. Remove Multiverse-Inventories, as LobbyAPI should handle multiple inventories");
 		}
-		if (Bukkit.getPluginManager().getPlugin("PerWorldInventory") != null) {
-			Bukkit.getPluginManager().disablePlugin(Bukkit.getPluginManager().getPlugin("PerWorldInventory"));
+		Plugin pwi = Bukkit.getPluginManager().getPlugin("PerWorldInventory");
+		if (pwi != null) {
+			Bukkit.getPluginManager().disablePlugin(pwi);
 			Bukkit.broadcastMessage(prefix
 					+ " LobbyAPI is incompatible with PerWorldInventory. Remove PerWorldInventory, as LobbyAPI should handle multiple inventories");
 		}
@@ -191,7 +186,7 @@ public class Main extends JavaPlugin implements Listener {
 		getServer().getPluginManager().registerEvents(this, this);
 		new BukkitRunnable() {
 			public void run() {
-				for (LobbyWorld lb : getWorlds()) {
+				for (LobbyWorld lb : LobbyWorld.getLobbyWorlds()) {
 					if (lb.hasVoidDisable()) {
 						for (Player p : lb.getWorld().getPlayers()) {
 							if (p.getLocation().getY() < -2) {
@@ -204,13 +199,6 @@ public class Main extends JavaPlugin implements Listener {
 			}
 		}.runTaskTimer(this, 0, 20);
 
-		// Time Check
-		/*
-		 * new BukkitRunnable() { public void run() { for (LobbyWorld wo : worlds) if
-		 * (wo != null && wo.hasStaticTime())
-		 * getServer().getWorld(wo.getWorldName()).setTime(wo.getStaticTime()); }
-		 * }.runTaskTimer(this, 0, 10 * 20L);
-		 */
 		if (getConfig() != null && getConfig().contains("hasBungee") && getConfig().getBoolean("hasBungee")) {
 			getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
 			getServer().getConsoleSender().sendMessage(prefix + ChatColor.GREEN + "Bungee For LobbyAPI is enabled");
@@ -235,14 +223,14 @@ public class Main extends JavaPlugin implements Listener {
 		Metrics met = new Metrics(this);
 		/*
 		 * met.addCustomChart(new Metrics.SimplePie("worlds-loaded") {
-		 * 
+		 *
 		 * @Override public String getValue() { return String.valueOf(worlds.size()); }
 		 * }); met.addCustomChart(new Metrics.SimplePie("bungee-support") {
-		 * 
+		 *
 		 * @Override public String getValue() { return
 		 * String.valueOf(bungeeServers.size()); } }); met.addCustomChart(new
 		 * Metrics.SimplePie("updater-active") {
-		 * 
+		 *
 		 * @Override public String getValue() { return
 		 * String.valueOf(getConfig().getBoolean("auto-update")); } });
 		 */
@@ -266,7 +254,7 @@ public class Main extends JavaPlugin implements Listener {
 
 	public void setInventorySize(boolean isOp) {
 		int maxSlot = 0;
-		for (LobbyWorld w : this.worlds) {
+		for (LobbyWorld w : LobbyWorld.getLobbyWorlds()) {
 			if (w.isHidden())
 				continue;
 			if (w != null && w.getSlot() > maxSlot) {
@@ -337,7 +325,7 @@ public class Main extends JavaPlugin implements Listener {
 	@SuppressWarnings("deprecation")
 	@EventHandler
 	private void onPlayerDeath(PlayerRespawnEvent event) {
-		LobbyWorld lb = LobbyAPI.getLobbyWorld(event.getPlayer().getWorld().getName());
+		LobbyWorld lb = LobbyAPI.getLobbyWorld(event.getPlayer().getWorld());
 
 		if (lb == null)
 			return;
@@ -345,32 +333,22 @@ public class Main extends JavaPlugin implements Listener {
 		if (!event.getPlayer().getWorld().getGameRuleValue("keepInventory").equalsIgnoreCase("true"))
 			clearInventory(event.getPlayer());
 		saveInventory(event.getPlayer(), event.getPlayer().getWorld());
-
-		/*
-		 * if (lb == null) { if (lb.getMainWorld() != null) {
-		 * event.setRespawnLocation(LobbyAPI.getLobbyWorld(lb.getMainWorld()).getSpawn()
-		 * ); return; } else { return; } }
-		 */
-
-		if (event.getPlayer().getBedSpawnLocation() != null
-				&& (event.getPlayer().getBedSpawnLocation().getWorld().equals(lb.getWorld())
-						|| (lb.getRespawnWorld() != null && event.getPlayer().getBedSpawnLocation().getWorld()
-								.equals(LobbyAPI.getLobbyWorld(lb.getRespawnWorld()).getWorld()))))
-			return;
+		try {
+			if (event.getPlayer().getBedSpawnLocation() != null
+					&& (event.getPlayer().getBedSpawnLocation().getWorld().equals(lb.getWorld())
+				/*|| (lb.getRespawnWorld() != null && event.getPlayer().getBedSpawnLocation().getWorld()
+				.equals(LobbyAPI.getLobbyWorld(lb.getRespawnWorld()).getWorld()))*/))
+				return;
+		} catch (Error | Exception e231124) {
+		}
 		// Do not interfere if the player has a bed in this world.
 
-		if (lb.getRespawnWorld() != null) {
-			event.setRespawnLocation(LobbyAPI.getLobbyWorld(lb.getRespawnWorld()).getSpawn());
-			// } else if (LobbyWorld.getMainLobby() != null) {
-			// event.setRespawnLocation(LobbyWorld.getMainLobby().getSpawn());
-		} else {
-			event.setRespawnLocation(lb.getSpawn());
-			// Should never happen. Test it
-		}
-	}
-
-	public static String getPrefix() {
-		return prefix;
+		//if (lb.getRespawnWorld() != null) {
+		//	event.setRespawnLocation(LobbyAPI.getLobbyWorld(lb.getRespawnWorld()).getSpawn());
+		//} else {
+		event.setRespawnLocation(lb.getSpawn());
+		// Should never happen. Test it
+		//}
 	}
 
 	@EventHandler
@@ -389,144 +367,101 @@ public class Main extends JavaPlugin implements Listener {
 				}
 			}.runTaskTimer(this, 0, 5);
 		}
-		for (LobbyWorld wo : worlds)
+		for (LobbyWorld wo : LobbyWorld.getLobbyWorlds())
 			lastWorld.put(event.getPlayer().getName(), wo.hasMainWorld() ? wo.getWorld() : goingTo);
 	}
 
 	@EventHandler
 	private void onTeleport(EntityPortalEvent event) {
-		LobbyWorld curr = LobbyAPI.getLobbyWorld(event.getFrom().getWorld());
-		if (curr != null && !curr.hasPortal()) {
-			event.setCancelled(true);
-			Bukkit.broadcastMessage("previous world is null");
-			return;
-		}
-		if (event.getTo().getWorld() == Bukkit.getWorlds().get(2)) {
-			Location temp = event.getTo();
-			if (temp == null) {
-				if (event.getFrom().getWorld().getEnvironment() == Environment.THE_END) {
-					temp = curr.getEnd().getSpawnLocation();// new Location(curr.getEnd(), 0, 100, 0);
-				} else {
-					temp = curr.getSpawn();
-				}
-			} else {
-				temp.setWorld(curr.getEnd());
-			}
-			event.setTo(temp);
-		} else if (event.getTo().getWorld() == Bukkit.getWorlds().get(1)) {
-			Location temp = event.getTo();
-			if (temp == null) {
-				if (event.getFrom().getWorld().getEnvironment() == Environment.NETHER) {
-					temp = new Location(curr.getNether(), event.getFrom().getX() * 8, event.getFrom().getY(),
-							event.getFrom().getZ() * 8);
-				} else {
-					temp = new Location(curr.getNether(), event.getFrom().getX() / 8, event.getFrom().getY(),
-							event.getFrom().getZ() / 8);
-				}
-			} else {
-				temp.setWorld(curr.getNether());
-			}
-			event.setTo(temp);
-		} else if (event.getTo().getWorld() == Bukkit.getWorlds().get(0)) {
-			Location loc = event.getTo();
-			if (curr.getNether() != null) {
-				event.getTo().setWorld(curr.getNether());
-			} else if (curr.getEnd() != null) {
-				event.getTo().setWorld(curr.getEnd());
-			}
-			event.setTo(loc);
-		}
 
+		LobbyWorld curr = LobbyAPI.getLobbyWorld(event.getFrom().getWorld());
+		Location to = handlePortalConversion(event.getEntity(), curr, event.getFrom(), event.getTo(), (event.getTo().getWorld() == Bukkit.getWorlds().get(2) ? TeleportCause.END_PORTAL : TeleportCause.NETHER_PORTAL),
+				event);
+		if (to != null)
+			event.setTo(to);
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST)
 	private void onTeleport(PlayerPortalEvent event) {
 		LobbyWorld curr = LobbyAPI.getLobbyWorld(event.getFrom().getWorld());
+		Location to = handlePortalConversion(event.getPlayer(), curr, event.getFrom(), event.getTo(), event.getCause(),
+				event);
+		if (to != null) {
+			event.setTo(to);
+		}
+	}
+
+	private Location handlePortalConversion(Entity to, LobbyWorld curr, Location getFrom, Location getTo,
+											TeleportCause cause, Event event) {
 		if (curr != null && !curr.hasPortal()) {
-			event.setCancelled(true);
+			((Cancellable) event).setCancelled(true);
 			Bukkit.broadcastMessage("previous world is null");
-			return;
+			return null;
 		}
-		if (event.getCause() == TeleportCause.END_PORTAL) {
-			Location temp = event.getTo();
-			if (temp == null) {
-				if (event.getFrom().getWorld().getEnvironment() == Environment.THE_END) {
-					temp = curr.getEnd().getSpawnLocation();// new Location(curr.getEnd(), 0, 100, 0);
-				} else {
-					temp = curr.getSpawn();
-				}
+		if (cause == TeleportCause.END_PORTAL) {
+			if (getFrom.getWorld().getEnvironment() == Environment.THE_END) {
+				getTo = curr.getSpawn();// new Location(curr.getEnd(), 0, 100, 0);
 			} else {
-				temp.setWorld(curr.getEnd());
+				getTo = curr.getEnd().getSpawnLocation();
 			}
-			event.setTo(temp);
-		} else if (event.getCause() == TeleportCause.NETHER_PORTAL) {
-			Location temp = event.getTo();
-			if (temp == null) {
-				if (event.getFrom().getWorld().getEnvironment() == Environment.NETHER) {
-					temp = new Location(curr.getNether(), event.getFrom().getX() * 8, event.getFrom().getY(),
-							event.getFrom().getZ() * 8);
-				} else {
-					temp = new Location(curr.getNether(), event.getFrom().getX() / 8, event.getFrom().getY(),
-							event.getFrom().getZ() / 8);
-				}
+			return getTo;
+		} else if (cause == TeleportCause.NETHER_PORTAL) {
+			if (getFrom.getWorld().getEnvironment() == Environment.NETHER) {
+				getTo = new Location(curr.getWorld(), getFrom.getX() * 8, getFrom.getY(), getFrom.getZ() * 8);
 			} else {
-				temp.setWorld(curr.getNether());
+				getTo = new Location(curr.getNether(), getFrom.getX() / 8, getFrom.getY(), getFrom.getZ() / 8);
 			}
-			event.setTo(temp);
-		} else if (event.getTo().getWorld() == Bukkit.getWorlds().get(0)) {
-			Location loc = event.getTo();
+			return getTo;
+		} else if (getTo.getWorld() == Bukkit.getWorlds().get(0)) {
 			if (curr.getNether() != null) {
-				event.getTo().setWorld(curr.getNether());
+				getTo.setWorld(curr.getNether());
 			} else if (curr.getEnd() != null) {
-				event.getTo().setWorld(curr.getEnd());
+				getTo.setWorld(curr.getEnd());
 			}
-			if (loc != null)
-				event.setTo(loc);
+			return getTo;
 		}
+		return null;
+
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST)
 	private void onWorldchange(PlayerChangedWorldEvent event) {
 		final Player p = event.getPlayer();
 		saveInventory(p, event.getFrom());
-		LobbyWorld lw = LobbyAPI.getLobbyWorld(p.getWorld());
-		final boolean sameWorld;
-		if (lw != null && LobbyAPI.getLobbyWorld(event.getFrom()) != null) {
-			sameWorld = lw.getSaveName().equals(LobbyAPI.getLobbyWorld(event.getFrom()).getSaveName());
-		} else
-			sameWorld = false;
-		if (lw != null) {
-			// if (lw.shouldWorldShouldSavePlayerLocation())
-			// lw.setLastLocation(event.getPlayer(), event.getPlayer().getLocation());
-			// setLastLocationForWorld(event.getPlayer(), lw, event.getf);
-			if (enablePWI)
-				if (!sameWorld) {
-					clearInventory(p);
-				}
-		}
+		final LobbyWorld lw = LobbyAPI.getLobbyWorld(p.getWorld());
+		final LobbyWorld lwF = LobbyAPI.getLobbyWorld(event.getFrom());
+		final boolean sameWorld = (lw == lwF);
 
+		lastWorld.put(p.getName(), p.getWorld());
+
+		if (lw != null) {
+			if (enablePWI)
+				clearInventory(p);
+		}
 		new BukkitRunnable() {
 			public void run() {
-				if (LobbyAPI.getLobbyWorld(p.getWorld()) != null) {
+				LobbyWorld lfT = LobbyAPI.getLobbyWorld(p.getWorld());
+				if (lfT != null) {
 					if (enablePWI) {
 						// if (!sameWorld) {
 						clearInventory(p);
 						loadInventory(p, p.getWorld());
 						// }
 					}
-					if (LobbyAPI.getLobbyWorld(p.getWorld()).getGameMode() != null)
-						p.setGameMode(LobbyAPI.getLobbyWorld(p.getWorld().getName()).getGameMode());
+					if (lfT.getGameMode() != null && !lfT.getSaveName().equals(lwF.getSaveName()))
+						p.setGameMode(lfT.getGameMode());
 
-					if (LobbyAPI.getLobbyWorld(p.getWorld()).getSpawnItems() != null
-							&& LobbyAPI.getLobbyWorld(p.getWorld()).getSpawnItems().size() > 0)
-						for (ItemStack is : LobbyAPI.getLobbyWorld(p.getWorld()).getSpawnItems())
+					if (lfT.getSpawnItems() != null && lfT.getSpawnItems().size() > 0)
+						for (ItemStack is : lfT.getSpawnItems())
 							if (is != null)
 								if (!p.getInventory().containsAtLeast(is, 1))
 									p.getInventory().addItem(is);
 				}
+
 				lastWorld.put(p.getName(), p.getWorld());
 			}
-		}.runTaskLater(this, 5);
+		}.runTaskLater(this, 2);
+
 	}
 
 	@EventHandler
@@ -543,7 +478,6 @@ public class Main extends JavaPlugin implements Listener {
 
 					boolean isBungee = false;
 					if (this.bungeeServers.size() > 0) {
-
 						for (String s : event.getCurrentItem().getItemMeta().getLore()) {
 							if (s.contains(ChatColor.RED + "" + ChatColor.GREEN)) {
 								isBungee = true;
@@ -562,7 +496,7 @@ public class Main extends JavaPlugin implements Listener {
 
 						}
 					} else
-						for (LobbyWorld wo : worlds) {
+						for (LobbyWorld wo : LobbyWorld.getLobbyWorlds()) {
 							if (wo == null)
 								continue;
 							if (wo.getSlot() == event.getSlot() && !wo.isHidden()) {
@@ -578,16 +512,17 @@ public class Main extends JavaPlugin implements Listener {
 											.sendMessage(ChatColor.RED + "This world is full, please try again later.");
 								} else if (!event.getWhoClicked().hasPermission("lobbyapi.bypassworldlimits")
 										&& (wo.isPrivate() && !wo.getWhitelistedPlayersUUID()
-												.contains(event.getWhoClicked().getUniqueId()))) {
+										.contains(event.getWhoClicked().getUniqueId()))) {
 									event.getWhoClicked()
 											.sendMessage(ChatColor.RED + "You are not whitelisted for this world.");
 								} else {
 
 									final PlayerSelectWorldEvent e = new PlayerSelectWorldEvent(
 											(Player) event.getWhoClicked(), wo);
-									// TODO: Veify: If world does not save location, return spawn.
-									if (getLastLocationForWorld((Player) event.getWhoClicked(), wo) != null) {
-										e.setDestination(getLastLocationForWorld((Player) event.getWhoClicked(), wo));
+
+									Location lastLoc;
+									if ((lastLoc = getLastLocationForWorld((Player) event.getWhoClicked(), wo)) != null) {
+										e.setDestination(lastLoc);
 									}
 									Bukkit.getPluginManager().callEvent(e);
 									if (!e.getIsCanceled()) {
@@ -616,9 +551,9 @@ public class Main extends JavaPlugin implements Listener {
 											playersOnline
 													.append(((Player) oo[i]).getDisplayName()
 															+ (i != (oo.length - 1 < 7 ? oo.length - 1 : 7) ? " ,"
-																	: (oo.length - 7 > 0
-																			? " ...(" + (oo.length - 7) + " more)"
-																			: "")));
+															: (oo.length - 7 > 0
+															? " ...(" + (oo.length - 7) + " more)"
+															: "")));
 
 										try {
 											Method method = e.getPlayer().getClass().getMethod("sendTitle",
@@ -683,7 +618,7 @@ public class Main extends JavaPlugin implements Listener {
 		p.setHealth((double) 20);
 		p.setExp((float) 0);
 		p.setLevel(0);
-		p.setFoodLevel((int) 20);
+		p.setFoodLevel(20);
 		for (PotionEffect ep : p.getActivePotionEffects())
 			p.removePotionEffect(ep.getType());
 	}
@@ -691,11 +626,11 @@ public class Main extends JavaPlugin implements Listener {
 	private void loadInventory(Player p, World w) {
 		if (w == null) {
 			getServer().getConsoleSender().sendMessage(
-					prefix + " The world \"" + w + "\" is null! Inventories for this world will not be saved.");
+					prefix + " The world that " + p.getName() + " is teleporting to is null! Inventories for this world will not be saved.");
 			return;
 		}
 		if (LobbyAPI.getLobbyWorld(w) == null) {
-			getServer().getConsoleSender().sendMessage(prefix + " You have no registered world called \"" + w.getName()
+			getServer().getConsoleSender().sendMessage(prefix + " You have no registered worlds called \"" + w.getName()
 					+ "\"! Inventories for this world will not be loaded.");
 			return;
 		}
@@ -727,10 +662,39 @@ public class Main extends JavaPlugin implements Listener {
 		} catch (Error | Exception e2) {
 		}
 
-		if (config.get(p.getName() + "." + s + ".xpl") != null)
+		if (config.contains(p.getName() + "." + s + ".xpl"))
 			p.setLevel((int) config.get(p.getName() + "." + s + ".xpl"));
-		if (config.get(p.getName() + "." + s + ".hunger") != null)
+		if (config.contains(p.getName() + "." + s + ".xp"))
+			p.setExp((float) (double) config.get(p.getName() + "." + s + ".xp"));
+		if (config.contains(p.getName() + "." + s + ".hunger"))
 			p.setFoodLevel((int) config.get(p.getName() + "." + s + ".hunger"));
+
+		if (config.contains(p.getName() + "." + s + ".potions_effects")) {
+			for (String effect : config.getConfigurationSection(p.getName() + "." + s + ".potions_effects").getKeys(false)) {
+				PotionEffectType type = PotionEffectType.getByName(effect);
+				int duration = config.getInt(p.getName() + "." + s + ".potions_effects." + effect + ".dur");
+				int amplifier = config.getInt(p.getName() + "." + s + ".potions_effects." + effect + ".amp");
+				p.addPotionEffect(new PotionEffect(type, duration, amplifier));
+			}
+		}
+
+		if (config.contains(p.getName() + "." + s + ".allowflight"))
+			p.setAllowFlight(config.getBoolean(p.getName() + "." + s + ".allowflight"));
+		if (config.contains(p.getName() + "." + s + ".compasslocation"))
+			p.setCompassTarget((Location) config.get(p.getName() + "." + s + ".compasslocation"));
+		if (config.contains(p.getName() + "." + s + ".fireticks"))
+			p.setFireTicks(config.getInt(p.getName() + "." + s + ".fireticks"));
+		try {
+			if (config.contains(p.getName() + "." + s + ".bedspawn"))
+				p.setBedSpawnLocation((Location) config.get(p.getName() + "." + s + ".bedspawn"));
+		} catch (Error | Exception e45) {
+		}
+		if (config.contains(p.getName() + "." + s + ".saturation"))
+			p.setSaturation((float) (double) config.get(p.getName() + "." + s + ".saturation"));
+		if (config.contains(p.getName() + "." + s + ".exhaustion"))
+			p.setExhaustion((float) (double) config.get(p.getName() + "." + s + ".exhaustion"));
+		if (config.contains(p.getName() + "." + s + ".air"))
+			p.setRemainingAir(config.getInt(p.getName() + "." + s + ".air"));
 	}
 
 	private Location getLastLocationForWorld(Player p, LobbyWorld lw) {
@@ -878,6 +842,19 @@ public class Main extends JavaPlugin implements Listener {
 		config.set(p.getName() + "." + world2 + ".xpl", p.getLevel());
 		config.set(p.getName() + "." + world2 + ".health", p.getHealth());
 		config.set(p.getName() + "." + world2 + ".hunger", p.getFoodLevel());
+		config.set(p.getName() + "." + world2 + ".allowflight", p.getAllowFlight());
+		config.set(p.getName() + "." + world2 + ".compasslocation", p.getCompassTarget());
+		config.set(p.getName() + "." + world2 + ".fireticks", p.getFireTicks());
+		try {
+			try {
+				config.set(p.getName() + "." + world2 + ".bedspawn", p.getBedSpawnLocation());
+			} catch (Error | Exception e4) {
+			}
+			config.set(p.getName() + "." + world2 + ".exhaustion", p.getExhaustion());
+			config.set(p.getName() + "." + world2 + ".saturation", p.getSaturation());
+			config.set(p.getName() + "." + world2 + ".air", p.getRemainingAir());
+		} catch (Error | Exception e4) {
+		}
 		ItemStack[] is = p.getInventory().getContents();
 		config.set(p.getName() + "." + world2 + ".i", null);
 		for (int itemIndex = 0; itemIndex < 36; itemIndex++)
@@ -888,7 +865,6 @@ public class Main extends JavaPlugin implements Listener {
 					|| p.getInventory().getItemInOffHand().getType() == Material.AIR) {
 				config.set(p.getName() + "." + world2 + ".i.offhand", null);
 			} else {
-				// if(config.contains(p.getName() + "." + world2 + ".i.offhand"))
 				config.set(p.getName() + "." + world2 + ".i.offhand", p.getInventory().getItemInOffHand());
 			}
 		} catch (Error | Exception e2) {
@@ -899,9 +875,12 @@ public class Main extends JavaPlugin implements Listener {
 		config.set(p.getName() + "." + world2 + ".a." + 3, p.getInventory().getChestplate());
 		config.set(p.getName() + "." + world2 + ".a." + 4, p.getInventory().getHelmet());
 
-		// if (lw.shouldWorldShouldSavePlayerLocation()) {
-		// config.set(p.getName() + "." + world2 + ".LastLocation", p.getLocation());
-		// }
+		config.set(p.getName() + "." + world2 + ".potions_effects", null);
+		for (PotionEffect eff : p.getActivePotionEffects()) {
+			config.set(p.getName() + "." + world2 + ".potions_effects." + eff.getType().getName() + ".dur", eff.getDuration());
+			config.set(p.getName() + "." + world2 + ".potions_effects." + eff.getType().getName() + ".amo", eff.getAmplifier());
+		}
+
 		try {
 			config.save(tempHolder);
 		} catch (IOException e) {
@@ -929,10 +908,16 @@ public class Main extends JavaPlugin implements Listener {
 	public void loadLocalWorlds() {
 		final Main main = this;
 		getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-			@SuppressWarnings({ "deprecation", "unchecked" })
+			@SuppressWarnings({"deprecation", "unchecked"})
 			public void run() {
 				if (getConfig().contains("Worlds")) {
 					for (final String key : getConfig().getConfigurationSection("Worlds").getKeys(false)) {
+						if (getConfig().contains("Worlds." + key + ".respawnWorld")) {
+							getConfig().set("Worlds." + key, null);
+							saveConfig();
+							continue;
+						}
+
 						try {
 							String name = getConfig().getString("Worlds." + key + ".name");
 							String displayname = null;
@@ -941,6 +926,10 @@ public class Main extends JavaPlugin implements Listener {
 							} else {
 								displayname = key;
 							}
+							/**
+							 * Only here to make sure that the loc variable will **always** be removed in
+							 * case a user updates
+							 */
 							if (getConfig().contains("Worlds." + key + ".loc")) {
 								Location l = (Location) getConfig().get("Worlds." + key + ".loc");
 								if (l != null) {
@@ -954,10 +943,6 @@ public class Main extends JavaPlugin implements Listener {
 									Bukkit.broadcastMessage(prefix + " SpawnLocation has been reset for world " + name
 											+ ". Please reset the spawnlocation by using /LobbyAPI changeSpawn.");
 								}
-								/**
-								 * Only here to make sure that the loc variable will **always** be removed in
-								 * case a user updates
-								 */
 								getConfig().set("Worlds." + key + ".loc", null);
 								saveConfig();
 							}
@@ -973,7 +958,7 @@ public class Main extends JavaPlugin implements Listener {
 												+ " for '" + name + "' was null. Re-creating world");
 								Environment env = ConfigHandler.containsWorldVariable(key, ConfigKeys.WORLDENVIROMENT)
 										? Environment.valueOf((String) ConfigHandler.getWorldVariableObject(key,
-												ConfigKeys.WORLDENVIROMENT))
+										ConfigKeys.WORLDENVIROMENT))
 										: Environment.NORMAL;
 								WorldCreator wc = new WorldCreator(name.toLowerCase()).environment(env).seed(
 										ConfigHandler.getWorldVariableInt(key, ConfigKeys.CustomAddedWorlds_Seed));
@@ -986,11 +971,10 @@ public class Main extends JavaPlugin implements Listener {
 								w = Bukkit.createWorld(wc);
 								l = new Location(w, x, y, z);
 								if (l == null || w == null)
-									Bukkit.getConsoleSender().sendMessage(prefix + ChatColor.RED
-											+ (w == null ? "WorldInst" : (w == null ? "Location" : "Something"))
-											+ " for '" + name
-											+ "' is still null after recreating world. Something may be wrong!");
+									Bukkit.getConsoleSender().sendMessage(prefix + ChatColor.RED + "WorldInst for '" + name + "' is still null after recreating world. Something may be wrong!");
 							}
+
+
 							if (getConfig().contains("Worlds." + key + ".spawnLoc.yaw")) {
 								float yaw = (float) getConfig().getDouble("Worlds." + key + ".spawnLoc.yaw");
 								float pitch = (float) getConfig().getDouble("Worlds." + key + ".spawnLoc.pitch");
@@ -1022,27 +1006,25 @@ public class Main extends JavaPlugin implements Listener {
 									false);
 							for (String jC : getConfig().getStringList("Worlds." + key + ".joincommands"))
 								lw.addCommand(jC);
-							final World fWorld = w;
-							new BukkitRunnable() {
 
-								@Override
-								public void run() {
-									if (getConfig().contains("Worlds." + key + "." + ConfigKeys.PORTALLIST)) {
-										List<Location> portals = new ArrayList<>();
-										List<String> listAsString = getConfig()
-												.getStringList("Worlds." + key + "." + ConfigKeys.PORTALLIST);
-										for (String a : listAsString) {
-											String[] splits = a.split(",");
-											int x2 = Integer.parseInt(splits[0]);
-											int y2 = Integer.parseInt(splits[1]);
-											int z2 = Integer.parseInt(splits[2]);
-											Location portaltest = new Location(fWorld, x2, y2, z2);
-											portals.add(portaltest);
-										}
-										lw.setPortalLocations(portals);
-									}
-								}
-							}.runTaskLater(main, 2);
+
+							if (getConfig().contains("Worlds." + key + "." + ConfigKeys.LINKED_NETHER)) {
+								String connectname = getConfig().getString("Worlds." + key + "." + ConfigKeys.LINKED_NETHER);
+								Environment env = Environment.NETHER;
+								WorldCreator wc = new WorldCreator(connectname.toLowerCase()).environment(env).seed(w.getSeed());
+								wc.generator(Bukkit.getWorlds().get(1).getGenerator());
+								World nether = Bukkit.createWorld(wc);
+								lw.setNether(nether);
+							}
+							if (getConfig().contains("Worlds." + key + "." + ConfigKeys.LINKED_END)) {
+								String connectname = getConfig().getString("Worlds." + key + "." + ConfigKeys.LINKED_END);
+								Environment env = Environment.THE_END;
+								WorldCreator wc = new WorldCreator(connectname.toLowerCase()).environment(env).seed(w.getSeed());
+								wc.generator(Bukkit.getWorlds().get(2).getGenerator());
+								World end = Bukkit.createWorld(wc);
+								lw.setEnd(end);
+							}
+
 
 							if (getConfig().contains("Worlds." + key + ".weatherstate")) {
 								WeatherState ws = WeatherState.getWeatherStateByName(
@@ -1052,9 +1034,7 @@ public class Main extends JavaPlugin implements Listener {
 
 							lw.setDisplayName(displayname);
 
-							boolean hidden = getConfig().contains("Worlds." + key + ".hidden")
-									? getConfig().getBoolean("Worlds." + key + ".hidden")
-									: false;
+							boolean hidden = getConfig().contains("Worlds." + key + ".hidden") && getConfig().getBoolean("Worlds." + key + ".hidden");
 							lw.setHidden(hidden);
 
 							int maxplayers = getConfig().contains("Worlds." + key + ".maxPlayers")
@@ -1062,14 +1042,10 @@ public class Main extends JavaPlugin implements Listener {
 									: -1;
 							lw.setMaxPlayers(maxplayers >= 0, maxplayers);
 
-							boolean locsaving = getConfig().contains("Worlds." + key + ".shouldsavelocation")
-									? getConfig().getBoolean("Worlds." + key + ".shouldsavelocation")
-									: false;
+							boolean locsaving = getConfig().contains("Worlds." + key + ".shouldsavelocation") && getConfig().getBoolean("Worlds." + key + ".shouldsavelocation");
 							lw.setWorldShouldSavePlayerLocation(locsaving);
 
-							boolean portal = getConfig().contains("Worlds." + key + ".canuseportals")
-									? getConfig().getBoolean("Worlds." + key + ".canuseportals")
-									: false;
+							boolean portal = getConfig().contains("Worlds." + key + ".canuseportals") && getConfig().getBoolean("Worlds." + key + ".canuseportals");
 							lw.setPortal(portal);
 
 							if (getConfig().contains("Worlds." + key + ".connectedTo")) {
@@ -1078,22 +1054,6 @@ public class Main extends JavaPlugin implements Listener {
 								getConfig().set("Worlds." + key + ".connectedTo", null);
 								saveConfig();
 							}
-							if (getConfig().contains("Worlds." + key + ".respawnWorld")) {
-								lw.setRespawnWorld(Bukkit.getWorld(
-										getConfig().getString("Worlds." + key + ".respawnWorld").toLowerCase()));
-							}
-							new BukkitRunnable() {
-
-								@Override
-								public void run() {
-									if (getConfig().contains("Worlds." + key + "." + ConfigKeys.LINKED_END))
-										lw.setEnd(Bukkit.getWorld(ConfigHandler
-												.getWorldVariableString(key, ConfigKeys.LINKED_END).toLowerCase()));
-									if (getConfig().contains("Worlds." + key + "." + ConfigKeys.LINKED_NETHER))
-										lw.setNether(Bukkit.getWorld(ConfigHandler
-												.getWorldVariableString(key, ConfigKeys.LINKED_NETHER).toLowerCase()));
-								}
-							}.runTaskLater(Main.this, 6);
 
 							if (ConfigHandler.containsWorldVariable(lw, ConfigKeys.DefaultItems))
 								lw.setSpawnItems((List<ItemStack>) ConfigHandler.getWorldVariableObject(lw,
@@ -1105,9 +1065,7 @@ public class Main extends JavaPlugin implements Listener {
 							if (ConfigHandler.containsWorldVariable(lw, ConfigKeys.DisableVoid))
 								lw.setVoidDisable(ConfigHandler.getWorldVariableBoolean(lw, ConfigKeys.DisableVoid));
 
-							boolean isprivate = getConfig().contains("Worlds." + key + ".isprivate")
-									? getConfig().getBoolean("Worlds." + key + ".isprivate")
-									: false;
+							boolean isprivate = getConfig().contains("Worlds." + key + ".isprivate") && getConfig().getBoolean("Worlds." + key + ".isprivate");
 							List<String> uuids = getConfig().contains("Worlds." + key + ".whitelistedUUIDS")
 									? getConfig().getStringList("Worlds." + key + ".whitelistedUUIDS")
 									: null;
@@ -1182,10 +1140,6 @@ public class Main extends JavaPlugin implements Listener {
 
 	public HashMap<String, World> getLastWorld() {
 		return lastWorld;
-	}
-
-	public Set<LobbyWorld> getWorlds() {
-		return worlds;
 	}
 
 	public Set<LobbyServer> getBungeeServers() {

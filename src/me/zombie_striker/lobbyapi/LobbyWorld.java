@@ -15,29 +15,16 @@
  */
 package me.zombie_striker.lobbyapi;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
-import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.World;
-import org.bukkit.WorldCreator;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+
+import java.util.*;
 
 public class LobbyWorld extends LobbyIcon {
 
 	private static LobbyWorld MAIN_LOBBY = null;
-
-	public static LobbyWorld getMainLobby() {
-		return MAIN_LOBBY;
-	}
-
+	private static Set<LobbyWorld> worlds = new HashSet<LobbyWorld>();
 	private Location spawn;
 	private boolean canUsePortal = false;
 	private boolean canUseEnderChest;
@@ -46,63 +33,85 @@ public class LobbyWorld extends LobbyIcon {
 	private boolean disableVoidDeath;
 	private int staticTime;
 	private WeatherState weatherState = WeatherState.NORMAL;
-
 	private boolean hasMaxPlayers;
 	private int maxPlayers;
-
 	private World mainWorld;
-
 	private World nether;
 	private World end;
-	private World respawnWorld;
-
 	private boolean isPrivate;
 	private Set<UUID> allowedPlayersUUID = new HashSet<UUID>();
-	// private Set<String> allowedPlayersString = new HashSet<String>();
-
 	private List<String> commandsIssed = new ArrayList<>();
-
 	private List<Location> portalLocations = new ArrayList<Location>();
-
 	private boolean shouldSavePlayerLocation = false;
-
 	private List<ItemStack> worldItems;
 	private GameMode gamemode = null;
-
 	private List<String> worldDescription = new ArrayList<String>();
 	private String saveName;
-
 	private boolean isLobby = false;
 
-	public void setNether(World nether) {
-		this.nether = nether;
+	public LobbyWorld(boolean loadedFC, String worldname, int ID, int amount, short color, Location spawn,
+					  String saveName, GameMode gm) {
+		super(loadedFC, worldname, ID, amount, color);
+		this.mainWorld = Bukkit.getWorld(worldname.toLowerCase());
+		this.spawn = spawn;
+		this.saveName = saveName;
+		this.gamemode = gm;
 	}
 
-	public void setEnd(World end) {
-		this.end = end;
+	public static LobbyWorld getLobbyWorldFromWorld(World world) {
+		for (LobbyWorld lw : worlds) {
+			if (lw.getWorld() == world || (lw.getNether() != null && lw.getNether() == world) || (lw.getEnd() != null && lw.getEnd() == world))
+				return lw;
+		}
+		return null;
+	}
+
+	public static Set<LobbyWorld> getLobbyWorlds() {
+		return worlds;
+	}
+
+	public static LobbyWorld getMainLobby() {
+		return MAIN_LOBBY;
+	}
+
+	/**
+	 * Changes the Main lobby world.
+	 *
+	 * @param lw
+	 */
+	public static void setMainLobby(LobbyWorld lw) {
+		MAIN_LOBBY = lw;
+	}
+
+	/**
+	 * Removes main lobby world.
+	 *
+	 * @param lw
+	 */
+	public static void removeMainLobby() {
+		MAIN_LOBBY = null;
 	}
 
 	public World getNether() {
 		return nether;
 	}
 
+	public void setNether(World nether) {
+		this.nether = nether;
+	}
+
 	public World getEnd() {
 		return end;
 	}
 
-	public List<Location> getPortalLocations() {
-		return portalLocations;
-	}
-
-	public void setPortalLocations(List<Location> loc) {
-		portalLocations = loc;
+	public void setEnd(World end) {
+		this.end = end;
 	}
 
 	/**
 	 * Sets whether a world should save the location of a world.
-	 * 
-	 * @param should
-	 *            save the location for a world
+	 *
+	 * @param should save the location for a world
 	 * @return
 	 */
 	public void setWorldShouldSavePlayerLocation(boolean b) {
@@ -111,9 +120,8 @@ public class LobbyWorld extends LobbyIcon {
 
 	/**
 	 * Sets whether a world should save the location of a world.
-	 * 
-	 * @param should
-	 *            save the location for a world
+	 *
+	 * @param should save the location for a world
 	 * @return
 	 */
 	public boolean shouldWorldShouldSavePlayerLocation() {
@@ -123,7 +131,7 @@ public class LobbyWorld extends LobbyIcon {
 	/**
 	 * Returns if a world has food and health disabled. Useful for worlds where you
 	 * don't want players to die.
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean hasDisabledHungerAndHealth() {
@@ -132,7 +140,7 @@ public class LobbyWorld extends LobbyIcon {
 
 	/**
 	 * Sets if a world will disable food and health
-	 * 
+	 *
 	 * @param b
 	 */
 	public void setDisableHungerAndHealth(boolean b) {
@@ -141,7 +149,7 @@ public class LobbyWorld extends LobbyIcon {
 
 	/**
 	 * Returns if a world has the void disabled. Useful for lobby worlds
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean hasVoidDisable() {
@@ -150,7 +158,7 @@ public class LobbyWorld extends LobbyIcon {
 
 	/**
 	 * Sets if a world will disable food and health
-	 * 
+	 *
 	 * @param b
 	 */
 	public void setVoidDisable(boolean b) {
@@ -158,80 +166,12 @@ public class LobbyWorld extends LobbyIcon {
 	}
 
 	/**
-	 * Changes the Main lobby world.
-	 * 
-	 * @param lw
-	 */
-	public static void setMainLobby(LobbyWorld lw) {
-		MAIN_LOBBY = lw;
-	}
-
-	/**
 	 * Sets the Main lobby world to be equal to this world.
-	 * 
+	 *
 	 * @param lw
 	 */
 	public void setAsMainLobby() {
 		MAIN_LOBBY = this;
-	}
-
-	/**
-	 * Removes main lobby world.
-	 * 
-	 * @param lw
-	 */
-	public static void removeMainLobby() {
-		MAIN_LOBBY = null;
-	}
-
-	public LobbyWorld(boolean loadedFC, String worldname, int ID, int amount, short color, Location spawn,
-			String saveName, GameMode gm) {
-		super(loadedFC, worldname, ID, amount, color);
-		this.mainWorld = Bukkit.getWorld(worldname.toLowerCase());
-		this.spawn = spawn;
-		this.saveName = saveName;
-		this.gamemode = gm;
-
-		// this.canUsePortal =
-		// ((mainWorld!=null&&Bukkit.getWorlds().get(0).equals(mainWorld))||worldname.equals("world_nether"));
-	}
-
-	public enum WeatherState {
-		NORMAL(0), NO_RAIN(1), ALWAYS_RAIN(2);
-
-		int data;
-
-		private WeatherState(int data) {
-			this.data = data;
-		}
-
-		public static WeatherState getWeatherStateByName(String name) {
-			if (name == null)
-				return null;
-
-			if (name.equalsIgnoreCase("normal"))
-				return NORMAL;
-			if (name.equalsIgnoreCase("always_rain"))
-				return ALWAYS_RAIN;
-			if (name.equalsIgnoreCase("no_rain"))
-				return NO_RAIN;
-			return null;
-		}
-
-		public String toString() {
-			if (data == 0)
-				return "NORMAL";
-			if (data == 1)
-				return "NO_RAIN";
-			if (data == 2)
-				return "ALWAYS_RAIN";
-			return "null";
-		}
-
-		public int getRawValue() {
-			return data;
-		}
-
 	}
 
 	public void addCommand(String commands) {
@@ -242,33 +182,26 @@ public class LobbyWorld extends LobbyIcon {
 		return this.commandsIssed;
 	}
 
-	public void setSaveName(String savename) {
-		this.saveName = savename;
+	public WeatherState getWeatherState() {
+		return this.weatherState;
 	}
 
 	public void setWeatherState(WeatherState weatherstate) {
 		this.weatherState = weatherstate;
 	}
 
-	public WeatherState getWeatherState() {
-		return this.weatherState;
+	public boolean isLobby() {
+		return this.isLobby;
 	}
 
 	public void setLobby(boolean b) {
 		this.isLobby = b;
 	}
 
-	public boolean isLobby() {
-		return this.isLobby;
-	}
-
 	public String getWorldName() {
 		return getName();
 	}
 
-	public World getRespawnWorld() {
-		return respawnWorld;
-	}
 
 	public Location getSpawn() {
 		if (spawn.getWorld() == null) {
@@ -282,6 +215,10 @@ public class LobbyWorld extends LobbyIcon {
 		}
 
 		return spawn;
+	}
+
+	public void setSpawn(Location l) {
+		spawn = l;
 	}
 
 	public boolean hasPortal() {
@@ -303,6 +240,17 @@ public class LobbyWorld extends LobbyIcon {
 		return 0;
 	}
 
+	/**
+	 * @param i is the time the world is set to. Will
+	 */
+	public void setStaticTime(int i) {
+		if (i < 0)
+			this.isStaticTime = false;
+		else
+			this.isStaticTime = false;
+		this.staticTime = i;
+	}
+
 	public boolean hasMainWorld() {
 		return this.mainWorld != null;
 	}
@@ -310,6 +258,10 @@ public class LobbyWorld extends LobbyIcon {
 	@Deprecated
 	public World getMainWorld() {
 		return getWorld();
+	}
+
+	public void setMainWorld(World w) {
+		this.mainWorld = w;
 	}
 
 	public World getWorld() {
@@ -356,24 +308,32 @@ public class LobbyWorld extends LobbyIcon {
 		return worldItems;
 	}
 
+	public void setSpawnItems(List<ItemStack> i) {
+		worldItems = i;
+	}
+
 	public String getSaveName() {
 		return saveName;
+	}
+
+	public void setSaveName(String savename) {
+		this.saveName = savename;
 	}
 
 	public List<String> getDescription() {
 		return worldDescription;
 	}
 
+	public void setDescription(List<String> l) {
+		worldDescription = l;
+	}
+
 	public GameMode getGameMode() {
 		return this.gamemode;
 	}
 
-	public void setRespawnWorld(World world) {
-		respawnWorld = world;
-	}
-
-	public void setSpawn(Location l) {
-		spawn = l;
+	public void setGameMode(GameMode g) {
+		this.gamemode = g;
 	}
 
 	public void setPortal(boolean b) {
@@ -384,23 +344,6 @@ public class LobbyWorld extends LobbyIcon {
 		canUseEnderChest = b;
 	}
 
-	/**
-	 * 
-	 * @param i
-	 *            is the time the world is set to. Will
-	 */
-	public void setStaticTime(int i) {
-		if (i < 0)
-			this.isStaticTime = false;
-		else
-			this.isStaticTime = false;
-		this.staticTime = i;
-	}
-
-	public void setMainWorld(World w) {
-		this.mainWorld = w;
-	}
-
 	public void setStaticTime(boolean b, int i) {
 		this.isStaticTime = b;
 		this.staticTime = i;
@@ -409,10 +352,6 @@ public class LobbyWorld extends LobbyIcon {
 	public void setMaxPlayers(boolean b, int max) {
 		this.hasMaxPlayers = b;
 		this.maxPlayers = max;
-	}
-
-	public void setGameMode(GameMode g) {
-		this.gamemode = g;
 	}
 
 	public void setIsPrivate(boolean b) {
@@ -445,11 +384,41 @@ public class LobbyWorld extends LobbyIcon {
 		return list;
 	}
 
-	public void setSpawnItems(List<ItemStack> i) {
-		worldItems = i;
-	}
+	public enum WeatherState {
+		NORMAL(0), NO_RAIN(1), ALWAYS_RAIN(2);
 
-	public void setDescription(List<String> l) {
-		worldDescription = l;
+		int data;
+
+		WeatherState(int data) {
+			this.data = data;
+		}
+
+		public static WeatherState getWeatherStateByName(String name) {
+			if (name == null)
+				return null;
+
+			if (name.equalsIgnoreCase("normal"))
+				return NORMAL;
+			if (name.equalsIgnoreCase("always_rain"))
+				return ALWAYS_RAIN;
+			if (name.equalsIgnoreCase("no_rain"))
+				return NO_RAIN;
+			return null;
+		}
+
+		public String toString() {
+			if (data == 0)
+				return "NORMAL";
+			if (data == 1)
+				return "NO_RAIN";
+			if (data == 2)
+				return "ALWAYS_RAIN";
+			return "null";
+		}
+
+		public int getRawValue() {
+			return data;
+		}
+
 	}
 }

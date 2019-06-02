@@ -1,17 +1,16 @@
 package me.zombie_striker.lobbyapi.utils;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.Set;
-
 import me.zombie_striker.lobbyapi.LobbyWorld;
 import me.zombie_striker.lobbyapi.Main;
-
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Set;
 
 public class ConfigHandler {
 
@@ -24,50 +23,6 @@ public class ConfigHandler {
 		file = f2;
 		m = main;
 	}
-
-	public enum ConfigKeys {
-		WorldSelector("worldselector"), CanUsePortals("canuseportals"), DisableHealthAndHunger(
-				"disablehealthandhunger"), DisableVoid("disablevoid"), isHidden("hidden"), Material(
-						"material"), Weather("weatherstate"), Color("color"), JoiningCommands("joincommands"), GameMode(
-								"gamemode"), SavingLocation("playerworldsavinglocations"), ShouldBeSavingLocation(
-										"shouldsavelocation"), DefaultItems("defaultitems"), CustomAddedWorlds_Seed(
-												"Seeds"), ENABLE_PER_WORLD_INVENTORIES(
-														"Enable_Per_World_Inventories"), LINKED_NETHER(
-																"Linked_nether"), LINKED_END(
-																		"Linked_End"), WORLDENVIROMENT(
-																				"World_Enviroment"), PORTALLIST(
-																						"Portal_Loc_List");
-
-		private String s;
-
-		ConfigKeys(String s2) {
-			this.s = s2;
-		}
-
-		@Override
-		public String toString() {
-			return s;
-		}
-	}/*
-		 * 
-		 * public static Set<String> getCustomWorldKeys() { if
-		 * (!config.contains(ConfigKeys.CustomAddedWorlds.s)) return null; return
-		 * config.getConfigurationSection(ConfigKeys.CustomAddedWorlds.s).getKeys(false)
-		 * ; }
-		 * 
-		 * public static int getCustomWorldInt(String name, ConfigKeys path) { return
-		 * config.getInt(ConfigKeys.CustomAddedWorlds.s + "." + name + "." + path); }
-		 * 
-		 * public static String getCustomWorldString(String name, ConfigKeys path) {
-		 * return config.getString(ConfigKeys.CustomAddedWorlds.s + "." + name + "." +
-		 * path); }
-		 * 
-		 * public static void setCustomWorldValue(String name, ConfigKeys path, Object
-		 * o) { config = YamlConfiguration.loadConfiguration(file);
-		 * config.set(ConfigKeys.CustomAddedWorlds.s + "." + name + "." + path, o); try
-		 * { config.save(file); } catch (IOException e) { e.printStackTrace(); }
-		 * m.reloadConfig(); }
-		 */
 
 	public static void setLobbyAPIVariable(ConfigKeys key, Object value) {
 		config = YamlConfiguration.loadConfiguration(file);
@@ -166,4 +121,48 @@ public class ConfigHandler {
 	public static Object getWorldVariableObject(String lw, ConfigKeys key) {
 		return config.get("Worlds." + lw + "." + key);
 	}
+
+	public enum ConfigKeys {
+		WorldSelector("worldselector"), CanUsePortals("canuseportals"), DisableHealthAndHunger(
+				"disablehealthandhunger"), DisableVoid("disablevoid"), isHidden("hidden"), Material(
+				"material"), Weather("weatherstate"), Color("color"), JoiningCommands("joincommands"), GameMode(
+				"gamemode"), SavingLocation("playerworldsavinglocations"), ShouldBeSavingLocation(
+				"shouldsavelocation"), DefaultItems("defaultitems"), CustomAddedWorlds_Seed(
+				"Seeds"), ENABLE_PER_WORLD_INVENTORIES(
+				"Enable_Per_World_Inventories"), LINKED_NETHER(
+				"Linked_nether"), LINKED_END(
+				"Linked_End"), WORLDENVIROMENT(
+				"World_Enviroment"), PORTALLIST(
+				"Portal_Loc_List");
+
+		private String s;
+
+		ConfigKeys(String s2) {
+			this.s = s2;
+		}
+
+		@Override
+		public String toString() {
+			return s;
+		}
+	}/*
+	 *
+	 * public static Set<String> getCustomWorldKeys() { if
+	 * (!config.contains(ConfigKeys.CustomAddedWorlds.s)) return null; return
+	 * config.getConfigurationSection(ConfigKeys.CustomAddedWorlds.s).getKeys(false)
+	 * ; }
+	 *
+	 * public static int getCustomWorldInt(String name, ConfigKeys path) { return
+	 * config.getInt(ConfigKeys.CustomAddedWorlds.s + "." + name + "." + path); }
+	 *
+	 * public static String getCustomWorldString(String name, ConfigKeys path) {
+	 * return config.getString(ConfigKeys.CustomAddedWorlds.s + "." + name + "." +
+	 * path); }
+	 *
+	 * public static void setCustomWorldValue(String name, ConfigKeys path, Object
+	 * o) { config = YamlConfiguration.loadConfiguration(file);
+	 * config.set(ConfigKeys.CustomAddedWorlds.s + "." + name + "." + path, o); try
+	 * { config.save(file); } catch (IOException e) { e.printStackTrace(); }
+	 * m.reloadConfig(); }
+	 */
 }

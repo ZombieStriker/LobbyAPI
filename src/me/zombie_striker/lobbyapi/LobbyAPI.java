@@ -12,24 +12,20 @@
  *  You should have received a copy of the GNU General Public License along with this program;
  *  if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
  *  02111-1307 USA
- */package me.zombie_striker.lobbyapi;
+ */
+package me.zombie_striker.lobbyapi;
+
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
+import org.bukkit.*;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-
-import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import com.google.common.io.ByteArrayDataOutput;
-import com.google.common.io.ByteStreams;
 
 public class LobbyAPI {
 
@@ -41,10 +37,11 @@ public class LobbyAPI {
 
 
 	public static void updateServerCount(Player player) {
-		for(LobbyServer ls : ml.getBungeeServers()) {
+		for (LobbyServer ls : ml.getBungeeServers()) {
 			updateServerCount(player, ls);
 		}
 	}
+
 	public static void updateServerCount(Player player, LobbyServer ls) {
 		ByteArrayDataOutput baos = ByteStreams.newDataOutput();
 		try {
@@ -58,9 +55,7 @@ public class LobbyAPI {
 
 	/**
 	 * returns if the world has a max amount of players for the world
-	 * 
-	 * @param the
-	 *            world
+	 *
 	 * @return if it was successful.
 	 */
 	public static boolean hasMaxPlayers(World wo) {
@@ -69,9 +64,7 @@ public class LobbyAPI {
 
 	/**
 	 * Returns the max amount of players
-	 * 
-	 * @param the
-	 *            world
+	 *
 	 * @return the max amount of players
 	 */
 	public static int getMaxPlayers(World wo) {
@@ -83,34 +76,30 @@ public class LobbyAPI {
 
 	/**
 	 * Adds a new lobbyworld
-	 * 
+	 * <p>
 	 * NOTE: You should use registerWorld instead if you want to create a new
 	 * lobby world.
-	 * 
+	 *
 	 * @param lobby
 	 */
 	public static void addLobbyWorld(LobbyWorld lobby) {
-		ml.getWorlds().add(lobby);
+		LobbyWorld.getLobbyWorlds().add(lobby);
 	}
 
 	/**
 	 * Removes a lobby world
-	 * 
+	 * <p>
 	 * NOTE: You should use unregisterWorld if you want to unregister a world
-	 * 
+	 *
 	 * @param lobby
 	 */
 	public static void removeLobbyWorld(LobbyWorld lobby) {
-		ml.getWorlds().remove(lobby);
+		LobbyWorld.getLobbyWorlds().remove(lobby);
 	}
 
 	/**
 	 * Sets the max players for a world
-	 * 
-	 * @param the
-	 *            world
-	 * @param the
-	 *            maxvalue
+	 *
 	 */
 	public static void setMaxPlayers(World wo, int maxvalue) {
 		getLobbyWorld(wo).setMaxPlayers(maxvalue < 0, maxvalue);
@@ -119,7 +108,7 @@ public class LobbyAPI {
 	/**
 	 * Use the methods from LobbyWorld instead of this. (Use
 	 * LobbyAPI.getLobbyWorld(World instance) to get the LobbyWorld instance)
-	 * 
+	 *
 	 * @param wo
 	 * @param material
 	 */
@@ -131,9 +120,8 @@ public class LobbyAPI {
 	/**
 	 * Use the methods from LobbyWorld instead of this. (Use
 	 * LobbyAPI.getLobbyWorld(World instance) to get the LobbyWorld instance)
-	 * 
+	 *
 	 * @param wo
-	 * @param material
 	 */
 	@Deprecated
 	public static Material getWorldMaterial(World wo) {
@@ -143,9 +131,8 @@ public class LobbyAPI {
 	/**
 	 * Use the methods from LobbyWorld instead of this. (Use
 	 * LobbyAPI.getLobbyWorld(World instance) to get the LobbyWorld instance)
-	 * 
+	 *
 	 * @param wo
-	 * @param material
 	 */
 	@Deprecated
 	public static void setIsWorldPrivate(boolean b, World wo) {
@@ -155,9 +142,8 @@ public class LobbyAPI {
 	/**
 	 * Use the methods from LobbyWorld instead of this. (Use
 	 * LobbyAPI.getLobbyWorld(World instance) to get the LobbyWorld instance)
-	 * 
+	 *
 	 * @param wo
-	 * @param material
 	 */
 	@Deprecated
 	public static boolean isWorldPrivate(World wo) {
@@ -167,9 +153,8 @@ public class LobbyAPI {
 	/**
 	 * Use the methods from LobbyWorld instead of this. (Use
 	 * LobbyAPI.getLobbyWorld(World instance) to get the LobbyWorld instance)
-	 * 
+	 *
 	 * @param wo
-	 * @param material
 	 */
 	@Deprecated
 	public static boolean hasNoEnderChestRules(World wo) {
@@ -179,9 +164,8 @@ public class LobbyAPI {
 	/**
 	 * Use the methods from LobbyWorld instead of this. (Use
 	 * LobbyAPI.getLobbyWorld(World instance) to get the LobbyWorld instance)
-	 * 
+	 *
 	 * @param wo
-	 * @param material
 	 */
 	@Deprecated
 	public static void setNoEnderChests(World wo, boolean b) {
@@ -190,7 +174,7 @@ public class LobbyAPI {
 
 	/**
 	 * Whitelists a UUID for a specific worlds
-	 * 
+	 *
 	 * @param uuid
 	 * @param wo
 	 * @return if it was successful
@@ -202,7 +186,7 @@ public class LobbyAPI {
 
 	/**
 	 * Whitelists a player's name for the wortd
-	 * 
+	 *
 	 * @param name
 	 * @param wo
 	 * @return if it was successful
@@ -215,7 +199,7 @@ public class LobbyAPI {
 
 	/**
 	 * Whitelists a player through there name.
-	 * 
+	 *
 	 * @param name
 	 * @param wo
 	 */
@@ -227,12 +211,12 @@ public class LobbyAPI {
 			return;
 		}
 		getLobbyWorld(wo).addWhitelistedPlayer(
-				(Player) Bukkit.getOfflinePlayer(name));
+				Bukkit.getOfflinePlayer(name));
 	}
 
 	/**
 	 * Whitelists a player through their UUID
-	 * 
+	 *
 	 * @param uuid
 	 * @param wo
 	 */
@@ -243,12 +227,12 @@ public class LobbyAPI {
 			return;
 		}
 		getLobbyWorld(wo).addWhitelistedPlayer(
-				(Player) Bukkit.getOfflinePlayer(uuid));
+				Bukkit.getOfflinePlayer(uuid));
 	}
 
 	/**
 	 * Whitelits a group of players through their names
-	 * 
+	 *
 	 * @param name
 	 * @param wo
 	 */
@@ -261,13 +245,13 @@ public class LobbyAPI {
 		}
 		for (String s : name) {
 			getLobbyWorld(wo).addWhitelistedPlayer(
-					(Player) Bukkit.getOfflinePlayer(s));
+					Bukkit.getOfflinePlayer(s));
 		}
 	}
 
 	/**
 	 * Whitelists a group of players through their UUIDs
-	 * 
+	 *
 	 * @param uuid
 	 * @param wo
 	 */
@@ -279,33 +263,17 @@ public class LobbyAPI {
 		}
 		for (UUID s : uuid) {
 			getLobbyWorld(wo).addWhitelistedPlayer(
-					(Player) Bukkit.getOfflinePlayer(s));
+					Bukkit.getOfflinePlayer(s));
 		}
 	}
 
 	/**
 	 * Use this to register your world
-	 * 
-	 * @param The
-	 *            world instance
-	 * @param The
-	 *            spawn location
-	 * @param The
-	 *            address you will save all the inventories to (E.g. "world1" or
-	 *            "minigame")
-	 * @param The
-	 *            description of the world
-	 * @param The
-	 *            material's duribility
-	 * @param The
-	 *            slot in the menu the item will be in. Note: If that slot was
-	 *            already taken, it will find an open one.
-	 * @param The
-	 *            Dafault gamemode
+	 *
 	 */
 	public static LobbyWorld registerWorld(World world, Location spawn,
-			String saveLetter, String worldDescription, Integer woolColor,
-			int menuSlot, GameMode gamemode) {
+										   String saveLetter, String worldDescription, Integer woolColor,
+										   int menuSlot, GameMode gamemode) {
 		LobbyWorld lw = new LobbyWorld(false, world.getName(), menuSlot, 1,
 				Short.parseShort(woolColor + ""), spawn, saveLetter, gamemode);
 		addLobbyWorld(lw);
@@ -315,19 +283,10 @@ public class LobbyAPI {
 
 	/**
 	 * Registers a "hidden" world (a world not seen in the menu)
-	 * 
-	 * @param The
-	 *            world instance
-	 * @param The
-	 *            spawn location
-	 * @param The
-	 *            address you will save all the inventories to (E.g. "world1" or
-	 *            "minigame")
-	 * @param The
-	 *            dafault gamemode
+	 *
 	 */
 	public static LobbyWorld registerHiddenWorld(World world, Location spawn,
-			String saveLetter, GameMode gamemode) {
+												 String saveLetter, GameMode gamemode) {
 		LobbyWorld lw = new LobbyWorld(false, world.getName(),
 				getOpenSlot(10), 1, (short) 0, spawn, saveLetter, gamemode);
 		addLobbyWorld(lw);
@@ -337,21 +296,11 @@ public class LobbyAPI {
 
 	/**
 	 * Registers a "Hidden" world (a world not awwn in the menu)
-	 * 
-	 * @param The
-	 *            world instance
-	 * @param The
-	 *            spawn location
-	 * @param The
-	 *            address you will save all the inventories to (E.g. "world1" or
-	 *            "minigame")
-	 * @param The
-	 *            world description
-	 * @param
+	 *
 	 * @param gamemode
 	 */
 	public static LobbyWorld registerHiddenWorld(World world, Location spawn,
-			String saveLetter, String worldDescription, GameMode gamemode) {
+												 String saveLetter, String worldDescription, GameMode gamemode) {
 		LobbyWorld lw = new LobbyWorld(false, world.getName(), getOpenSlot(0), 1,
 				(short) 0, spawn, saveLetter, gamemode);
 		addLobbyWorld(lw);
@@ -362,7 +311,7 @@ public class LobbyAPI {
 
 	/**
 	 * USED ONLY IF REGISTERING WORLDS FROM THE LOBBYAPI CONFIG
-	 * 
+	 *
 	 * @param world
 	 * @param spawn
 	 * @param saveLetter
@@ -374,8 +323,8 @@ public class LobbyAPI {
 	 */
 	@Deprecated
 	public static LobbyWorld registerWorldFromConfig(World world, Location spawn,
-			String saveLetter, String worldDescription, Integer woolColor,
-			Material worldMaterial, int menuSlot, GameMode gamemode) {
+													 String saveLetter, String worldDescription, Integer woolColor,
+													 Material worldMaterial, int menuSlot, GameMode gamemode) {
 		LobbyWorld lw = new LobbyWorld(true, world.getName(), menuSlot, 1,
 				Short.parseShort(woolColor + ""), spawn, saveLetter, gamemode);
 		addLobbyWorld(lw);
@@ -383,9 +332,10 @@ public class LobbyAPI {
 		setWorldMaterial(world, worldMaterial);
 		return lw;
 	}
+
 	/**
 	 * USED ONLY IF LOADING WORLDS FROM LOBBYAPI CONFIG
-	 * 
+	 *
 	 * @param world
 	 * @param spawn
 	 * @param saveLetter
@@ -396,20 +346,20 @@ public class LobbyAPI {
 	 */
 	@Deprecated
 	public static LobbyWorld registerWorldFromConfig(World world, Location spawn,
-			String saveLetter, String worldDescription, Integer woolColor,
-			int menuSlot, GameMode gamemode,boolean hidden) {
+													 String saveLetter, String worldDescription, Integer woolColor,
+													 int menuSlot, GameMode gamemode, boolean hidden) {
 		LobbyWorld lw = new LobbyWorld(true, world.getName(), menuSlot, 1,
 				Short.parseShort(woolColor + ""), spawn, saveLetter, gamemode);
 		addLobbyWorld(lw);
 		addWorldDescriptionLine(world, worldDescription);
-		if(hidden)
+		if (hidden)
 			hideWorld(world, true);
 		return lw;
 	}
 
 	/**
 	 * Unregisters a world
-	 * 
+	 *
 	 * @param world
 	 */
 	@Deprecated
@@ -419,7 +369,7 @@ public class LobbyAPI {
 
 	/**
 	 * Unregisters a bungee server
-	 * 
+	 *
 	 * @param server
 	 */
 	@Deprecated
@@ -429,14 +379,14 @@ public class LobbyAPI {
 
 	/**
 	 * Registers a bungee server
-	 * 
+	 *
 	 * @param server
 	 * @param slot
 	 * @param amount
 	 * @param woolColor
 	 */
 	public static void registerBungeeServer(String server, int slot,
-			int amount, Integer woolColor) {
+											int amount, Integer woolColor) {
 		LobbyServer lw = new LobbyServer(false, server, slot, amount,
 				Short.parseShort(woolColor + ""));
 		addBungeeServer(lw);
@@ -444,14 +394,14 @@ public class LobbyAPI {
 
 	/**
 	 * ONLY TO BE USED IF REIGSTERING A SERVER FROM LOBBYAPI CONFIG
-	 * 
+	 *
 	 * @param server
 	 * @param slot
 	 * @param woolColor
 	 */
 	@Deprecated
 	public static void registerBungeeServerFromConfig(String server, int slot,
-			Integer woolColor) {
+													  Integer woolColor) {
 		LobbyServer lw = new LobbyServer(true, server, slot, 1,
 				Short.parseShort(woolColor + ""));
 		addBungeeServer(lw);
@@ -459,7 +409,7 @@ public class LobbyAPI {
 
 	/**
 	 * Adds a bungee server NOTE: instead use registerBungeeServer
-	 * 
+	 *
 	 * @param ls
 	 */
 	public static void addBungeeServer(LobbyServer ls) {
@@ -468,7 +418,7 @@ public class LobbyAPI {
 
 	/**
 	 * Return the LobbyServer instance
-	 * 
+	 *
 	 * @param name
 	 * @return the LobbyServer instance
 	 */
@@ -482,7 +432,7 @@ public class LobbyAPI {
 
 	/**
 	 * Removes a BungeeServer
-	 * 
+	 *
 	 * @param name
 	 * @return
 	 */
@@ -493,16 +443,12 @@ public class LobbyAPI {
 
 	/**
 	 * Creates a custom itemstack
-	 * 
-	 * @param Displayname
-	 * @param Amount
-	 * @param Material
-	 * @param Lore
+	 *
 	 * @return the custom itemstack
 	 */
 	@SuppressWarnings("deprecation")
 	public static ItemStack setName(String name, int numb, Material mat,
-			List<String> lore) {
+									List<String> lore) {
 		ItemStack is = new ItemStack(mat, 1);
 		ItemMeta im = is.getItemMeta();
 		im.setDisplayName(name);
@@ -514,7 +460,7 @@ public class LobbyAPI {
 
 	/**
 	 * Hides the LobbyWorld from the menu
-	 * 
+	 *
 	 * @param wo
 	 * @param hidden
 	 */
@@ -524,7 +470,7 @@ public class LobbyAPI {
 
 	/**
 	 * Returns if the world is hidden from the menu
-	 * 
+	 *
 	 * @param wo
 	 * @return
 	 */
@@ -534,7 +480,7 @@ public class LobbyAPI {
 
 	/**
 	 * Creates a custom itemstack
-	 * 
+	 *
 	 * @param name
 	 * @param numb
 	 * @param mat
@@ -553,13 +499,13 @@ public class LobbyAPI {
 	/*
 	 * public static void addBungeeServer(String server) {
 	 * ml.bungeeServers.add(server); }
-	 * 
+	 *
 	 * public static void setBungeeDescription(String server, String message) {
 	 * ml.ServerDescription.put(server, message); }
-	 * 
+	 *
 	 * public static void setBungeeMenuColor(String server, Integer color) {
 	 * ml.ServerWoolColor.put(server, color); }
-	 * 
+	 *
 	 * public static void setBungeeMenuAmount(String server, Integer amount) {
 	 * ml.ServerWoolAmount.put(server, amount); }
 	 */
@@ -567,9 +513,7 @@ public class LobbyAPI {
 	/**
 	 * Use the methods from LobbyWorld instead of this. (Use
 	 * LobbyAPI.getLobbyWorld(World instance) to get the LobbyWorld instance)
-	 * 
-	 * @param wo
-	 * @param material
+	 *
 	 */
 	@Deprecated
 	public static void setWorldSpawn(World world, Location location) {
@@ -579,9 +523,7 @@ public class LobbyAPI {
 	/**
 	 * Use the methods from LobbyWorld instead of this. (Use
 	 * LobbyAPI.getLobbyWorld(World instance) to get the LobbyWorld instance)
-	 * 
-	 * @param wo
-	 * @param material
+	 *
 	 */
 	@Deprecated
 	public static void setWorldsStaticTime(World world, int time) {
@@ -591,9 +533,7 @@ public class LobbyAPI {
 	/**
 	 * Use the methods from LobbyWorld instead of this. (Use
 	 * LobbyAPI.getLobbyWorld(World instance) to get the LobbyWorld instance)
-	 * 
-	 * @param wo
-	 * @param material
+	 *
 	 */
 	@Deprecated
 	public static void setWorldDescription(World world, List<String> message) {
@@ -602,7 +542,7 @@ public class LobbyAPI {
 
 	/**
 	 * Adds one line to the world's description in the menu.
-	 * 
+	 *
 	 * @param world
 	 * @param message
 	 */
@@ -615,9 +555,7 @@ public class LobbyAPI {
 	/**
 	 * Use the methods from LobbyWorld instead of this. (Use
 	 * LobbyAPI.getLobbyWorld(World instance) to get the LobbyWorld instance)
-	 * 
-	 * @param wo
-	 * @param material
+	 *
 	 */
 	@Deprecated
 	public static void setWorldMenuColor(World world, Integer color) {
@@ -627,9 +565,7 @@ public class LobbyAPI {
 	/**
 	 * Use the methods from LobbyWorld instead of this. (Use
 	 * LobbyAPI.getLobbyWorld(World instance) to get the LobbyWorld instance)
-	 * 
-	 * @param wo
-	 * @param material
+	 *
 	 */
 	@Deprecated
 	public static void setWorldMenuAmount(World world, Integer amount) {
@@ -640,7 +576,7 @@ public class LobbyAPI {
 	 * Sets the speific world to be the "Mainworld" (E.g. inputting
 	 * "world_nether", "world" would mean that anytime the player teleports to
 	 * "world_nether" through the menu, it will redirect them to "world")
-	 * 
+	 *
 	 * @param world
 	 * @param main
 	 */
@@ -650,28 +586,26 @@ public class LobbyAPI {
 
 	/**
 	 * Removes a world from menu.
-	 * 
+	 *
 	 * @param world
 	 */
 	public static void removeWorld(World world) {
 		LobbyWorld Rwo = null;
-		for (LobbyWorld wo : ml.getWorlds()) {
+		for (LobbyWorld wo : LobbyWorld.getLobbyWorlds()) {
 			if (wo.getWorldName().equals(world.getName())) {
 				Rwo = wo;
 				break;
 			}
 		}
 		if (Rwo != null) {
-			ml.getWorlds().remove(Rwo);
+			LobbyWorld.getLobbyWorlds().remove(Rwo);
 		}
 	}
 
 	/**
 	 * Use the methods from LobbyWorld instead of this. (Use
 	 * LobbyAPI.getLobbyWorld(World instance) to get the LobbyWorld instance)
-	 * 
-	 * @param wo
-	 * @param material
+	 *
 	 */
 	@Deprecated
 	public static void addWorldThatCantUsePortals(World world) {
@@ -681,9 +615,7 @@ public class LobbyAPI {
 	/**
 	 * Use the methods from LobbyWorld instead of this. (Use
 	 * LobbyAPI.getLobbyWorld(World instance) to get the LobbyWorld instance)
-	 * 
-	 * @param wo
-	 * @param material
+	 *
 	 */
 	@Deprecated
 	public static void removeWorldThatCantUsePortals(World world) {
@@ -693,9 +625,7 @@ public class LobbyAPI {
 	/**
 	 * Use the methods from LobbyWorld instead of this. (Use
 	 * LobbyAPI.getLobbyWorld(World instance) to get the LobbyWorld instance)
-	 * 
-	 * @param wo
-	 * @param material
+	 *
 	 */
 	@Deprecated
 	public static void setWorldThatCantUsePortals(World world, boolean b) {
@@ -705,9 +635,7 @@ public class LobbyAPI {
 	/**
 	 * Use the methods from LobbyWorld instead of this. (Use
 	 * LobbyAPI.getLobbyWorld(World instance) to get the LobbyWorld instance)
-	 * 
-	 * @param wo
-	 * @param material
+	 *
 	 */
 	@Deprecated
 	public static void setWorldItems(World world, List<ItemStack> items) {
@@ -717,9 +645,7 @@ public class LobbyAPI {
 	/**
 	 * Use the methods from LobbyWorld instead of this. (Use
 	 * LobbyAPI.getLobbyWorld(World instance) to get the LobbyWorld instance)
-	 * 
-	 * @param wo
-	 * @param material
+	 *
 	 */
 	@Deprecated
 	public static void setWorldGameMode(World world, GameMode gm) {
@@ -729,9 +655,7 @@ public class LobbyAPI {
 	/**
 	 * Use the methods from LobbyWorld instead of this. (Use
 	 * LobbyAPI.getLobbyWorld(World instance) to get the LobbyWorld instance)
-	 * 
-	 * @param wo
-	 * @param material
+	 *
 	 */
 	@Deprecated
 	public static void setWorldMenuSlot(World world, Integer slot) {
@@ -739,12 +663,12 @@ public class LobbyAPI {
 
 	/**
 	 * Checks if a world has already been registers
-	 * 
+	 *
 	 * @param world
 	 * @return if the world has been registered
 	 */
 	public static boolean isRegistered(World world) {
-		for (LobbyWorld wo : ml.getWorlds()) {
+		for (LobbyWorld wo : LobbyWorld.getLobbyWorlds()) {
 			if (wo.getWorldName().equals(world.getName()))
 				return true;
 		}
@@ -753,52 +677,38 @@ public class LobbyAPI {
 
 	/**
 	 * Checks if the world has been registered
-	 * 
+	 *
 	 * @param world
 	 * @return if the world has been registered (Most cases, it will return
-	 *         true)
+	 * true)
 	 */
 	public static boolean isRegistered(LobbyWorld world) {
-		return ml.getWorlds().contains(world);
+		return LobbyWorld.getLobbyWorlds().contains(world);
 	}
 
 	/**
 	 * Use the methods from LobbyWorld instead of this. (Use
 	 * LobbyAPI.getLobbyWorld(World instance) to get the LobbyWorld instance)
-	 * 
-	 * @param wo
-	 * @param material
+	 *
 	 */
 	@Deprecated
 	public static Location getWorldSpawn(World world) {
 		return getLobbyWorld(world).getSpawn();
 	}
 
-	/**
-	 * Use the methods from LobbyWorld instead of this. (Use
-	 * LobbyAPI.getLobbyWorld(World instance) to get the LobbyWorld instance)
-	 * 
-	 * @param wo
-	 * @param material
-	 */
-	@Deprecated
-	public static void setWorldToTeleportToOnDeath(World world,
-			World worldToTeleportTo) {
-		getLobbyWorld(world).setRespawnWorld(worldToTeleportTo);
-	}
 
 	/**
 	 * Returns all the LobbyWorlds on the server
-	 * 
+	 *
 	 * @return
 	 */
 	public static Set<LobbyWorld> getWorlds() {
-		return ml.getWorlds();
+		return LobbyWorld.getLobbyWorlds();
 	}
 
 	/**
 	 * Gets the first open slot (after the specified slot) in thew menu
-	 * 
+	 *
 	 * @param slot
 	 * @return the first open slot (after the specified slot)
 	 */
@@ -807,7 +717,7 @@ public class LobbyAPI {
 		int times = 1;
 		for (int i = 0; i < times; i++) {
 			boolean isTaken = false;
-			for (LobbyWorld lw : ml.getWorlds()) {
+			for (LobbyWorld lw : LobbyWorld.getLobbyWorlds()) {
 				if (openslot == lw.getSlot()) {
 					isTaken = true;
 					break;
@@ -831,13 +741,13 @@ public class LobbyAPI {
 
 	/**
 	 * Returns the LobbbyWorld instance of the world
-	 * 
+	 *
 	 * @param name
 	 * @return
 	 */
 	public static LobbyWorld getLobbyWorld(String name) {
-		for (LobbyWorld w : ml.getWorlds()) {
-			if (w.getWorldName().equals(name))
+		for (LobbyWorld w : LobbyWorld.getLobbyWorlds()) {
+			if(w.getWorldName().equalsIgnoreCase(name) || (w.getNether()!=null && w.getNether().getName().equalsIgnoreCase(name)) || (w.getEnd()!=null && w.getEnd().getName().equalsIgnoreCase(name)))
 				return w;
 		}
 		return null;
@@ -845,31 +755,23 @@ public class LobbyAPI {
 
 	/**
 	 * Returns thelobbyWorld instance of the world
-	 * 
+	 *
 	 * @param wo
 	 * @return
 	 */
 	public static LobbyWorld getLobbyWorld(World wo) {
-		for (LobbyWorld w : ml.getWorlds()) {
-			if (wo == null) {
-				System.out.println(Main.getPrefix() + "The world provided is null +");
-				break;
-			}
-			if (w.getWorldName().equals(wo.getName()))
-				return w;
-		}
-		return null;
+		return LobbyWorld.getLobbyWorldFromWorld(wo);
 	}
 
 	/**
 	 * Gets the "Main lobby" (the default world the player will be teleported
 	 * to)
-	 * 
+	 *
 	 * @return the default world
 	 */
 	public static LobbyWorld getLobby() {
 		LobbyWorld lobby = null;
-		for (LobbyWorld w : ml.getWorlds()) {
+		for (LobbyWorld w : LobbyWorld.getLobbyWorlds()) {
 			if (w.isLobby())
 				return w;
 			if (lobby == null || lobby.getSlot() > w.getSlot()) {
@@ -882,12 +784,12 @@ public class LobbyAPI {
 	/**
 	 * Returns all of the save names for every world on the server (if multiple
 	 * worlds share the same savename, the savename will only be added once)
-	 * 
+	 *
 	 * @return
 	 */
 	public static List<String> getSaveNames() {
 		List<String> savenames = new ArrayList<String>();
-		for (LobbyWorld wo : ml.getWorlds()) {
+		for (LobbyWorld wo : LobbyWorld.getLobbyWorlds()) {
 			if (!savenames.contains(wo.getSaveName()))
 				savenames.add(wo.getSaveName());
 		}
@@ -897,13 +799,13 @@ public class LobbyAPI {
 	/**
 	 * Returns all of the LobbyWorlds that share the same name as the one
 	 * provided
-	 * 
+	 *
 	 * @param savename
 	 * @return
 	 */
 	public static List<LobbyWorld> getWorldsBySaveNameAsLobby(String savename) {
 		List<LobbyWorld> worlds = new ArrayList<LobbyWorld>();
-		for (LobbyWorld wo : ml.getWorlds()) {
+		for (LobbyWorld wo : LobbyWorld.getLobbyWorlds()) {
 			if (wo.getSaveName().equals(savename)) {
 				worlds.add(wo);
 			}
@@ -914,13 +816,13 @@ public class LobbyAPI {
 	/**
 	 * Returns all of the worlds that share the same save name as the one
 	 * provided
-	 * 
+	 *
 	 * @param savename
 	 * @return
 	 */
 	public static List<World> getWorldsBySaveName(String savename) {
 		List<World> worlds = new ArrayList<World>();
-		for (LobbyWorld wo : ml.getWorlds()) {
+		for (LobbyWorld wo : LobbyWorld.getLobbyWorlds()) {
 			if (wo.getSaveName().equals(savename)) {
 				worlds.add(Bukkit.getWorld(wo.getWorldName()));
 			}
@@ -930,27 +832,30 @@ public class LobbyAPI {
 
 	/**
 	 * Returns all of the LobbyWorlds that share the same material as the one provided
+	 *
 	 * @param material
 	 * @return
 	 */
 	public static List<LobbyWorld> getWorldsWithMaterialAsLobby(
 			Material material) {
 		List<LobbyWorld> worlds = new ArrayList<LobbyWorld>();
-		for (LobbyWorld wo : ml.getWorlds()) {
+		for (LobbyWorld wo :LobbyWorld.getLobbyWorlds()) {
 			if (wo.getMaterial() == material) {
 				worlds.add(wo);
 			}
 		}
 		return worlds;
 	}
+
 	/**
 	 * Returns all of the worlds that shre the same materials as the one provided
+	 *
 	 * @param material
 	 * @return
 	 */
 	public static List<World> getWorldsWithMaterial(Material material) {
 		List<World> worlds = new ArrayList<World>();
-		for (LobbyWorld wo : ml.getWorlds()) {
+		for (LobbyWorld wo : LobbyWorld.getLobbyWorlds()) {
 			if (wo.getMaterial() == material) {
 				worlds.add(Bukkit.getWorld(wo.getWorldName()));
 			}

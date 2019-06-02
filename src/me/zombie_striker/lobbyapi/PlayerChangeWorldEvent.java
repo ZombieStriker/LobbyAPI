@@ -20,24 +20,25 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
-public final class PlayerChangeWorldEvent extends Event{
+public final class PlayerChangeWorldEvent extends Event {
 
-    private static final HandlerList handlers = new HandlerList();
-    private Player teleporter;
- 
-    public PlayerChangeWorldEvent(Player teleporter) {
-    	this.teleporter = teleporter;
-    }
- 
-    public Player getPlayer() {
-        return teleporter;
-    }
-    public HandlerList getHandlers() {
-        return handlers;
-    }
- 
-    public static HandlerList getHandlerList() {
-        return handlers;
-    }
+	private static final HandlerList handlers = new HandlerList();
+	private Player teleporter;
+
+	public PlayerChangeWorldEvent(Player teleporter) {
+		this.teleporter = teleporter;
+	}
+
+	public static HandlerList getHandlerList() {
+		return handlers;
+	}
+
+	public Player getPlayer() {
+		return teleporter;
+	}
+
+	public HandlerList getHandlers() {
+		return handlers;
+	}
 
 }
