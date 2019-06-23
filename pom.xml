@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>me.zombie_striker</groupId>
     <artifactId>LobbyAPI</artifactId>
-    <version>3.7.88</version>
+    <version>3.7.90</version>
     <repositories>
 
         <repository>
@@ -22,6 +22,7 @@
                 <filtering>true</filtering>
                 <includes>
                     <include>plugin.yml</include>
+                    <include>changelog.txt</include>
                     <include>config.yml</include>
                 </includes>
             </resource>

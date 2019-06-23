@@ -23,6 +23,7 @@ import me.zombie_striker.lobbyapi.utils.ConfigHandler.ConfigKeys;
 import me.zombie_striker.lobbyapi.utils.GithubUpdater;
 import me.zombie_striker.lobbyapi.utils.Metrics;
 import me.zombie_striker.lobbyapi.utils.UpdateAnouncer;
+import me.zombie_striker.lobbyapi.utils.portalgroup.NetherPortalFinder;
 import org.bukkit.*;
 import org.bukkit.World.Environment;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -245,10 +246,10 @@ public class Main extends JavaPlugin implements Listener {
 	}
 
 	public void onDisable() {
+		if(getServer().getOnlinePlayers().size() > 0)
 		for (Player p : getServer().getOnlinePlayers()) {
-			saveInventory(p, p.getWorld());
-			LobbyWorld lw = LobbyAPI.getLobbyWorld(p.getWorld());
-			setLastLocationForWorld(p, lw);
+			//saveInventory(p, p.getWorld());
+			//setLastLocationForWorld(p);
 		}
 	}
 
@@ -393,6 +394,8 @@ public class Main extends JavaPlugin implements Listener {
 
 	private Location handlePortalConversion(Entity to, LobbyWorld curr, Location getFrom, Location getTo,
 											TeleportCause cause, Event event) {
+		Location portal = getTo;
+
 		if (curr != null && !curr.hasPortal()) {
 			((Cancellable) event).setCancelled(true);
 			Bukkit.broadcastMessage("previous world is null");
@@ -400,26 +403,31 @@ public class Main extends JavaPlugin implements Listener {
 		}
 		if (cause == TeleportCause.END_PORTAL) {
 			if (getFrom.getWorld().getEnvironment() == Environment.THE_END) {
-				getTo = curr.getSpawn();// new Location(curr.getEnd(), 0, 100, 0);
+				portal = curr.getSpawn();// new Location(curr.getEnd(), 0, 100, 0);
 			} else {
-				getTo = curr.getEnd().getSpawnLocation();
+				portal = curr.getEnd().getSpawnLocation();
 			}
-			return getTo;
 		} else if (cause == TeleportCause.NETHER_PORTAL) {
 			if (getFrom.getWorld().getEnvironment() == Environment.NETHER) {
-				getTo = new Location(curr.getWorld(), getFrom.getX() * 8, getFrom.getY(), getFrom.getZ() * 8);
+				portal = new Location(curr.getWorld(), getFrom.getX() * 8, getFrom.getY(), getFrom.getZ() * 8);
 			} else {
-				getTo = new Location(curr.getNether(), getFrom.getX() / 8, getFrom.getY(), getFrom.getZ() / 8);
+				portal = new Location(curr.getNether(), getFrom.getX() / 8, getFrom.getY(), getFrom.getZ() / 8);
 			}
-			return getTo;
 		} else if (getTo.getWorld() == Bukkit.getWorlds().get(0)) {
 			if (curr.getNether() != null) {
-				getTo.setWorld(curr.getNether());
+				portal.setWorld(curr.getNether());
 			} else if (curr.getEnd() != null) {
-				getTo.setWorld(curr.getEnd());
+				portal.setWorld(curr.getEnd());
 			}
-			return getTo;
 		}
+
+		if(portal!=null){
+			if(!portal.getBlock().getType().name().endsWith("PORTAL")){
+				NetherPortalFinder.locate(portal);
+			}
+			return portal;
+		}
+
 		return null;
 
 	}
@@ -521,8 +529,12 @@ public class Main extends JavaPlugin implements Listener {
 											(Player) event.getWhoClicked(), wo);
 
 									Location lastLoc;
-									if ((lastLoc = getLastLocationForWorld((Player) event.getWhoClicked(), wo)) != null) {
-										e.setDestination(lastLoc);
+									if(wo.getSpawn().getWorld()==event.getWhoClicked().getWorld()){
+										e.setDestination(wo.getSpawn());
+									}else {
+										if ((lastLoc = getLastLocationForWorld((Player) event.getWhoClicked(), wo)) != null) {
+											e.setDestination(lastLoc);
+										}
 									}
 									Bukkit.getPluginManager().callEvent(e);
 									if (!e.getIsCanceled()) {
@@ -629,16 +641,21 @@ public class Main extends JavaPlugin implements Listener {
 					prefix + " The world that " + p.getName() + " is teleporting to is null! Inventories for this world will not be saved.");
 			return;
 		}
-		if (LobbyAPI.getLobbyWorld(w) == null) {
+		LobbyWorld lw = LobbyAPI.getLobbyWorld(w);
+		if (lw == null) {
 			getServer().getConsoleSender().sendMessage(prefix + " You have no registered worlds called \"" + w.getName()
 					+ "\"! Inventories for this world will not be loaded.");
 			return;
 		}
+		loadInventory(p,lw);
+
+	}
+	private void loadInventory(Player p, LobbyWorld lw) {
 		if (p.getInventory() == null) {
 			Bukkit.getConsoleSender().sendMessage(prefix + "Inventory is null");
 			return;
 		}
-		String s = LobbyAPI.getLobbyWorld(w).getSaveName();
+		String s = lw.getSaveName();
 		File tempHolder = new File(getDataFolder() + File.separator + "playerfiles",
 				p.getUniqueId().toString() + ".yml");
 		FileConfiguration config = getConfig();
@@ -646,7 +663,6 @@ public class Main extends JavaPlugin implements Listener {
 			config = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(tempHolder);
 
 		for (String key : config.getConfigurationSection(p.getName() + "." + s + ".i").getKeys(false))
-			// if ((ItemStack) config.get( p.getName() + "." + s + ".i."+ key) != null)
 			if (!key.equals("offhand"))
 				p.getInventory().setItem(Integer.parseInt(key),
 						(ItemStack) config.get(p.getName() + "." + s + ".i." + key));
@@ -656,7 +672,6 @@ public class Main extends JavaPlugin implements Listener {
 		p.getInventory().setHelmet((ItemStack) config.get(p.getName() + "." + s + ".a." + 4));
 
 		try {
-
 			if (config.contains(p.getName() + "." + s + ".i.offhand"))
 				p.getInventory().setItemInOffHand(config.getItemStack(p.getName() + "." + s + ".i.offhand"));
 		} catch (Error | Exception e2) {
@@ -697,7 +712,7 @@ public class Main extends JavaPlugin implements Listener {
 			p.setRemainingAir(config.getInt(p.getName() + "." + s + ".air"));
 	}
 
-	private Location getLastLocationForWorld(Player p, LobbyWorld lw) {
+	protected Location getLastLocationForWorld(Player p, LobbyWorld lw) {
 		if (lw.shouldWorldShouldSavePlayerLocation()) {
 			File tempHolder = new File(getDataFolder() + File.separator + "playerfiles",
 					p.getUniqueId().toString() + ".yml");
@@ -716,11 +731,17 @@ public class Main extends JavaPlugin implements Listener {
 		return null;
 	}
 
-	private void setLastLocationForWorld(Player p, LobbyWorld lw) {
+	protected void setLastLocationForWorld(Player p) {
+		LobbyWorld lw = LobbyAPI.getLobbyWorld(p.getWorld());
+		if (lw.shouldWorldShouldSavePlayerLocation())
+			setLastLocationForWorld(p, lw, p.getLocation());
+	}
+
+	protected void setLastLocationForWorld(Player p, LobbyWorld lw) {
 		setLastLocationForWorld(p, lw, p.getLocation());
 	}
 
-	private void setLastLocationForWorld(Player p, LobbyWorld lw, Location newLoc) {
+	protected void setLastLocationForWorld(Player p, LobbyWorld lw, Location newLoc) {
 		if (lw != null) {
 			if (lw.shouldWorldShouldSavePlayerLocation()) {
 				File tempHolder = new File(getDataFolder() + File.separator + "playerfiles",
@@ -815,12 +836,12 @@ public class Main extends JavaPlugin implements Listener {
 					prefix + " The world \"" + w + "\" is null! Inventories for this world will not be saved.");
 			return;
 		}
-		if (LobbyAPI.getLobbyWorld(w) == null) {
+		LobbyWorld lw = LobbyAPI.getLobbyWorld(w);
+		if (lw == null) {
 			getServer().getConsoleSender().sendMessage(prefix + " You have no registered world called \"" + w.getName()
 					+ "\"! Inventories for this world will not be saved.");
 			return;
 		}
-		LobbyWorld lw = LobbyAPI.getLobbyWorld(w.getName());
 		saveInventory(p, lw);
 
 	}
@@ -926,6 +947,7 @@ public class Main extends JavaPlugin implements Listener {
 							} else {
 								displayname = key;
 							}
+
 							/**
 							 * Only here to make sure that the loc variable will **always** be removed in
 							 * case a user updates
@@ -1092,7 +1114,7 @@ public class Main extends JavaPlugin implements Listener {
 					}
 				}
 			}
-		}, 2L);
+		}, 0L);
 	}
 
 	public void loadLocalServers() {

@@ -1,3 +1,11 @@
+3.7.90
+    Fixed issue where disabling could crash server.
+    Fixed issue where portal teleported to may not match correct XYZ location
+
+3.7.89
+    Fixed location saving for using /hub
+    Fixed teleportation: players go to spawn if they are already in the world
+
 3.7.88
     Added potion effects, saturation, bedspawns, compass, allowflight, air, and fireticks to the player's data per world.
     Fixed xp levels not being saved correctly

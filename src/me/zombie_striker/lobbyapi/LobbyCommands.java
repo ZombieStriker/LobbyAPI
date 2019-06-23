@@ -1362,6 +1362,9 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 				m.setInventorySize(false);
 				m.inventory = m.getServer().createInventory(null, m.inventorySize, m.title);
 
+				m.setLastLocationForWorld(player);
+
+
 				for (LobbyWorld wo : LobbyWorld.getLobbyWorlds()) {
 					if (wo != null) {
 						if (wo.isHidden())
