@@ -18,34 +18,24 @@ package me.zombie_striker.lobbyapi;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import me.zombie_striker.lobbyapi.LobbyWorld.WeatherState;
-import me.zombie_striker.lobbyapi.utils.ConfigHandler;
+import me.zombie_striker.lobbyapi.utils.*;
 import me.zombie_striker.lobbyapi.utils.ConfigHandler.ConfigKeys;
-import me.zombie_striker.lobbyapi.utils.GithubUpdater;
-import me.zombie_striker.lobbyapi.utils.Metrics;
-import me.zombie_striker.lobbyapi.utils.UpdateAnouncer;
 import me.zombie_striker.lobbyapi.utils.portalgroup.NetherPortalFinder;
 import org.bukkit.*;
 import org.bukkit.World.Environment;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.*;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityPortalEvent;
-import org.bukkit.event.entity.FoodLevelChangeEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.entity.*;
+import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.event.weather.WeatherChangeEvent;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.*;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
+import org.bukkit.potion.*;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
@@ -373,6 +363,26 @@ public class Main extends JavaPlugin implements Listener {
 	}
 
 	@EventHandler
+	public void onTorchDrop(ItemSpawnEvent event){
+		//TODO: find better fix.
+		if(event.getEntityType()==EntityType.DROPPED_ITEM){
+			Item item  = (Item) event.getEntity();
+			if(item.getItemStack().getType()== Material.TORCH && item.getWorld().getEnvironment()==Environment.THE_END) {
+				try{
+					if(item.getLocation().getBlock().getType()!=Material.END_PORTAL)
+						return;
+				}catch (Error|Exception e4){
+					if(!item.getLocation().getBlock().getType().name().equals("ENDER_PORTAL"))
+						return;
+				}
+				item.setPortalCooldown(200);
+				event.setCancelled(true);
+				return;
+			}
+		}
+	}
+
+	@EventHandler
 	private void onTeleport(EntityPortalEvent event) {
 
 		LobbyWorld curr = LobbyAPI.getLobbyWorld(event.getFrom().getWorld());
@@ -661,7 +671,9 @@ public class Main extends JavaPlugin implements Listener {
 		FileConfiguration config = getConfig();
 		if (tempHolder.exists())
 			config = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(tempHolder);
-
+		if(!config.contains(p.getName() + "." + s))
+			return;
+		if(config.contains(p.getName() + "." + s + ".i"))
 		for (String key : config.getConfigurationSection(p.getName() + "." + s + ".i").getKeys(false))
 			if (!key.equals("offhand"))
 				p.getInventory().setItem(Integer.parseInt(key),
@@ -710,6 +722,23 @@ public class Main extends JavaPlugin implements Listener {
 			p.setExhaustion((float) (double) config.get(p.getName() + "." + s + ".exhaustion"));
 		if (config.contains(p.getName() + "." + s + ".air"))
 			p.setRemainingAir(config.getInt(p.getName() + "." + s + ".air"));
+
+
+	if(config.contains(p.getName()+"."+s+".advancements"))
+		try{
+			Iterator<org.bukkit.advancement.Advancement> it = Bukkit.advancementIterator();
+			for(org.bukkit.advancement.Advancement a = it.next(); it.hasNext();it.next()){
+				Collection<String> awarded = config.getStringList(p.getName()+"."+s+".advancements."+a.getKey().getKey()+".awarded");
+				org.bukkit.advancement.AdvancementProgress progress = p.getAdvancementProgress(a);
+				for(String adv : a.getCriteria()){
+					if(awarded.contains(adv)){
+						progress.awardCriteria(adv);
+					}else{
+						progress.revokeCriteria(adv);
+					}
+				}
+			}
+		}catch(Error|Exception e4){}
 	}
 
 	protected Location getLastLocationForWorld(Player p, LobbyWorld lw) {
@@ -901,6 +930,15 @@ public class Main extends JavaPlugin implements Listener {
 			config.set(p.getName() + "." + world2 + ".potions_effects." + eff.getType().getName() + ".dur", eff.getDuration());
 			config.set(p.getName() + "." + world2 + ".potions_effects." + eff.getType().getName() + ".amo", eff.getAmplifier());
 		}
+
+		try{
+			config.set(p.getName()+"."+world2+".advancements",null);
+			Iterator<org.bukkit.advancement.Advancement> it = Bukkit.advancementIterator();
+			for(org.bukkit.advancement.Advancement a = it.next(); it.hasNext();it.next()){
+				org.bukkit.advancement.AdvancementProgress pro = p.getAdvancementProgress(a);
+				config.set(p.getName()+"."+world2+".advancements."+a.getKey().getKey()+".awarded",new ArrayList<String>(pro.getAwardedCriteria()));
+			}
+		}catch(Error|Exception e4){}
 
 		try {
 			config.save(tempHolder);

@@ -1,3 +1,7 @@
+3.7.91
+    Added option for saving advancements per world
+    Fixed crash on enderdragon being killed
+
 3.7.90
     Fixed issue where disabling could crash server.
     Fixed issue where portal teleported to may not match correct XYZ location
