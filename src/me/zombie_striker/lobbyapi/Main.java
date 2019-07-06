@@ -395,11 +395,17 @@ public class Main extends JavaPlugin implements Listener {
 	@EventHandler(priority = EventPriority.LOWEST)
 	private void onTeleport(PlayerPortalEvent event) {
 		LobbyWorld curr = LobbyAPI.getLobbyWorld(event.getFrom().getWorld());
+		saveInventory(event.getPlayer(),curr);
 		Location to = handlePortalConversion(event.getPlayer(), curr, event.getFrom(), event.getTo(), event.getCause(),
 				event);
 		if (to != null) {
 			event.setTo(to);
 		}
+		new BukkitRunnable(){
+			public void run(){
+				loadInventory(event.getPlayer(),event.getPlayer().getWorld());
+			}
+		}.runTaskLater(this,5);
 	}
 
 	private Location handlePortalConversion(Entity to, LobbyWorld curr, Location getFrom, Location getTo,
@@ -713,7 +719,7 @@ public class Main extends JavaPlugin implements Listener {
 			p.setFireTicks(config.getInt(p.getName() + "." + s + ".fireticks"));
 		try {
 			if (config.contains(p.getName() + "." + s + ".bedspawn"))
-				p.setBedSpawnLocation((Location) config.get(p.getName() + "." + s + ".bedspawn"));
+				p.setBedSpawnLocation((Location) config.get(p.getName() + "." + s + ".bedspawn"),true);
 		} catch (Error | Exception e45) {
 		}
 		if (config.contains(p.getName() + "." + s + ".saturation"))
@@ -727,7 +733,9 @@ public class Main extends JavaPlugin implements Listener {
 	if(config.contains(p.getName()+"."+s+".advancements"))
 		try{
 			Iterator<org.bukkit.advancement.Advancement> it = Bukkit.advancementIterator();
-			for(org.bukkit.advancement.Advancement a = it.next(); it.hasNext();it.next()){
+			for(org.bukkit.advancement.Advancement a = it.next(); it.hasNext();a=it.next()){
+				if(a.getKey().getKey().startsWith("recipes"))
+					continue;
 				Collection<String> awarded = config.getStringList(p.getName()+"."+s+".advancements."+a.getKey().getKey()+".awarded");
 				org.bukkit.advancement.AdvancementProgress progress = p.getAdvancementProgress(a);
 				for(String adv : a.getCriteria()){
@@ -762,6 +770,7 @@ public class Main extends JavaPlugin implements Listener {
 
 	protected void setLastLocationForWorld(Player p) {
 		LobbyWorld lw = LobbyAPI.getLobbyWorld(p.getWorld());
+		if(lw!=null)
 		if (lw.shouldWorldShouldSavePlayerLocation())
 			setLastLocationForWorld(p, lw, p.getLocation());
 	}
@@ -934,7 +943,9 @@ public class Main extends JavaPlugin implements Listener {
 		try{
 			config.set(p.getName()+"."+world2+".advancements",null);
 			Iterator<org.bukkit.advancement.Advancement> it = Bukkit.advancementIterator();
-			for(org.bukkit.advancement.Advancement a = it.next(); it.hasNext();it.next()){
+			for(org.bukkit.advancement.Advancement a = it.next(); it.hasNext(); a = it.next()){
+				if(a.getKey().getKey().startsWith("recipes"))
+					continue;
 				org.bukkit.advancement.AdvancementProgress pro = p.getAdvancementProgress(a);
 				config.set(p.getName()+"."+world2+".advancements."+a.getKey().getKey()+".awarded",new ArrayList<String>(pro.getAwardedCriteria()));
 			}

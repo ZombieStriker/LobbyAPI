@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>me.zombie_striker</groupId>
     <artifactId>LobbyAPI</artifactId>
-    <version>3.7.91</version>
+    <version>3.7.92</version>
     <repositories>
 
         <repository>
@@ -24,6 +24,14 @@
                     <include>plugin.yml</include>
                     <include>changelog.txt</include>
                     <include>config.yml</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src</directory>
+                <targetPath>src</targetPath>
+                <includes>
+                    <include>**/*.java</include>
+                    <include>**/*.gwt.xml</include>
                 </includes>
             </resource>
         </resources>
