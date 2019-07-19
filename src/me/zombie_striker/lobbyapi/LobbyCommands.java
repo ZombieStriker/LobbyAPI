@@ -1393,7 +1393,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 								ls.add(ChatColor.GRAY + s.getName());
 						}
 
-						if (!wo.isPrivate() || players.contains(player)) {
+						if (!wo.isPrivate() || wo.getWhitelistedPlayersUUID().contains(player.getUniqueId())) {
 							ItemStack is = LobbyAPI.setName(wo.getDisplayName(), wo.getColor(), wo.getMaterial(), ls);
 							is.setAmount(wo.getAmount());
 							if (player.getWorld().equals(wo.getWorld())) {

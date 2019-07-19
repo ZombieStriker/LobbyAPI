@@ -75,7 +75,17 @@ public class Main extends JavaPlugin implements Listener {
 			if ((e.toWeatherState() == (lw.getWeatherState() == WeatherState.NO_RAIN))
 					|| (e.toWeatherState() != (lw.getWeatherState() == WeatherState.ALWAYS_RAIN)))
 				e.setCancelled(true);
+	}
 
+	@EventHandler
+	public void onTeleport(PlayerTeleportEvent event){
+		if(event instanceof PlayerPortalEvent)
+			return;
+		if(event.getTo().getWorld()!=event.getFrom().getWorld()){
+			setLastLocationForWorld(event.getPlayer(),event.getFrom().getWorld(),event.getFrom());
+		}else{
+			setLastLocationForWorld(event.getPlayer(),event.getTo().getWorld(),event.getTo());
+		}
 	}
 
 	@EventHandler
@@ -208,7 +218,7 @@ public class Main extends JavaPlugin implements Listener {
 
 		// @SuppressWarnings("unused")
 		// final Updater updater = new Updater(this, 91206, true);
-		GithubUpdater.autoUpdate(this, "ZombieStriker", "LobbyAPI", "LobbyAPI");
+		GithubUpdater.autoUpdate(this, "ZombieStriker", "LobbyAPI", "LobbyAPI.jar");
 
 		@SuppressWarnings("unused")
 		Metrics met = new Metrics(this);
@@ -398,6 +408,7 @@ public class Main extends JavaPlugin implements Listener {
 		saveInventory(event.getPlayer(),curr);
 		Location to = handlePortalConversion(event.getPlayer(), curr, event.getFrom(), event.getTo(), event.getCause(),
 				event);
+		setLastLocationForWorld(event.getPlayer(),event.getFrom().getWorld(),event.getFrom());
 		if (to != null) {
 			event.setTo(to);
 		}
@@ -779,6 +790,12 @@ public class Main extends JavaPlugin implements Listener {
 		setLastLocationForWorld(p, lw, p.getLocation());
 	}
 
+	protected void setLastLocationForWorld(Player p, World w, Location newLoc) {
+		LobbyWorld lw = LobbyAPI.getLobbyWorld(w);
+		if(lw!=null)
+			if (lw.shouldWorldShouldSavePlayerLocation())
+				setLastLocationForWorld(p, lw, newLoc);
+	}
 	protected void setLastLocationForWorld(Player p, LobbyWorld lw, Location newLoc) {
 		if (lw != null) {
 			if (lw.shouldWorldShouldSavePlayerLocation()) {

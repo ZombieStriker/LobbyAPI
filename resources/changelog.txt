@@ -1,3 +1,7 @@
+3.7.93
+    Fixed location saving when teleporting within the world
+    Fixed private world for hub menu
+
 3.7.92
     Fixed per-world advancements.
     Fixed bed spawn location per world.

@@ -50,7 +50,9 @@ public class LobbyAPI {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		player.sendPluginMessage(ml, "BungeeCord", baos.toByteArray());
+		try {
+			player.sendPluginMessage(ml, "BungeeCord", baos.toByteArray());
+		}catch (Error|Exception e4){}
 	}
 
 	/**
