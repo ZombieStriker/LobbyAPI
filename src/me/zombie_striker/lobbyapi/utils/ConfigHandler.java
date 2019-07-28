@@ -129,7 +129,7 @@ public class ConfigHandler {
 				"gamemode"), SavingLocation("playerworldsavinglocations"), ShouldBeSavingLocation(
 				"shouldsavelocation"), DefaultItems("defaultitems"), CustomAddedWorlds_Seed(
 				"Seeds"), ENABLE_PER_WORLD_INVENTORIES(
-				"Enable_Per_World_Inventories"), LINKED_NETHER(
+				"Enable_Per_World_Inventories"), PER_WORLD_ENNDERCHESTS("Enable_Per_World_Ender_Chests"),LINKED_NETHER(
 				"Linked_nether"), LINKED_END(
 				"Linked_End"), WORLDENVIROMENT(
 				"World_Enviroment"), PORTALLIST(

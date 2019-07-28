@@ -1,3 +1,11 @@
+3.7.95
+    Added possible fix for inventories not saving in the end.
+    Added fix for enderchests in unregistered worlds
+    Added option to disable enderchests per world in config
+
+3.7.94
+    Added possible fix to worlds without seeds.
+
 3.7.93
     Fixed location saving when teleporting within the world
     Fixed private world for hub menu

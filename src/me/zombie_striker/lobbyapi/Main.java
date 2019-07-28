@@ -62,6 +62,8 @@ public class Main extends JavaPlugin implements Listener {
 	private boolean enablePWI = true;
 	private ItemStack worldSelector = null;
 
+	private boolean enableCustomEnderchestss = true;
+
 	public static String getPrefix() {
 		return prefix;
 	}
@@ -144,8 +146,9 @@ public class Main extends JavaPlugin implements Listener {
 						? Environment.valueOf(
 						(String) ConfigHandler.getWorldVariableObject(name, ConfigKeys.WORLDENVIROMENT))
 						: Environment.NORMAL;
-				WorldCreator wc = new WorldCreator(name.toLowerCase()).environment(env)
-						.seed(ConfigHandler.getWorldVariableInt(name, ConfigKeys.CustomAddedWorlds_Seed));
+				WorldCreator wc = new WorldCreator(name.toLowerCase()).environment(env);
+				if (ConfigHandler.containsWorldVariable(name,ConfigKeys.CustomAddedWorlds_Seed))
+						wc.seed(ConfigHandler.getWorldVariableInt(name, ConfigKeys.CustomAddedWorlds_Seed));
 				if (env == Environment.NETHER) {
 					wc.generator(Bukkit.getWorlds().get(1).getGenerator());
 				}
@@ -162,6 +165,9 @@ public class Main extends JavaPlugin implements Listener {
 
 		if (!ConfigHandler.containsLobbyAPIVariable(ConfigKeys.ENABLE_PER_WORLD_INVENTORIES)) {
 			ConfigHandler.setLobbyAPIVariable(ConfigKeys.ENABLE_PER_WORLD_INVENTORIES, true);
+		}
+		if (!ConfigHandler.containsLobbyAPIVariable(ConfigKeys.PER_WORLD_ENNDERCHESTS)) {
+			ConfigHandler.setLobbyAPIVariable(ConfigKeys.PER_WORLD_ENNDERCHESTS, enableCustomEnderchestss);
 		}
 
 		enablePWI = ConfigHandler.getLobbyAPIVariableBoolean(ConfigKeys.ENABLE_PER_WORLD_INVENTORIES);
@@ -289,18 +295,28 @@ public class Main extends JavaPlugin implements Listener {
 				&& e.getPlayer().getItemInHand().isSimilar(getWorldSelector()))
 			Bukkit.dispatchCommand(e.getPlayer(), "lobby");
 
-		if (e.getClickedBlock() != null && e.getClickedBlock().getType() == Material.ENDER_CHEST) {
-			if (e.getAction() == Action.RIGHT_CLICK_BLOCK) {
-				e.setCancelled(true);
-				e.getPlayer().openInventory(getEnderChest(e.getPlayer(), e.getPlayer().getWorld()));
+		if(enableCustomEnderchestss) {
+		LobbyWorld lw = LobbyAPI.getLobbyWorld(e.getPlayer().getWorld());
+		if(lw !=null) {
+			if (e.getClickedBlock() != null && e.getClickedBlock().getType() == Material.ENDER_CHEST) {
+				if (e.getAction() == Action.RIGHT_CLICK_BLOCK) {
+					e.setCancelled(true);
+					e.getPlayer().openInventory(getEnderChest(e.getPlayer(), e.getPlayer().getWorld()));
+				}
+			}
 			}
 		}
 	}
 
 	@EventHandler
 	public void onClose(InventoryCloseEvent e) {
-		if (e.getView().getTitle().equals("Ender Chest")) {
-			saveEnderChest((Player) e.getPlayer(), e.getInventory(), e.getPlayer().getWorld());
+		if(enableCustomEnderchestss) {
+			LobbyWorld lw = LobbyAPI.getLobbyWorld(e.getPlayer().getWorld());
+			if (lw != null) {
+				if (e.getView().getTitle().equals("Ender Chest")) {
+					saveEnderChest((Player) e.getPlayer(), e.getInventory(), e.getPlayer().getWorld());
+				}
+			}
 		}
 	}
 
@@ -336,20 +352,11 @@ public class Main extends JavaPlugin implements Listener {
 		saveInventory(event.getPlayer(), event.getPlayer().getWorld());
 		try {
 			if (event.getPlayer().getBedSpawnLocation() != null
-					&& (event.getPlayer().getBedSpawnLocation().getWorld().equals(lb.getWorld())
-				/*|| (lb.getRespawnWorld() != null && event.getPlayer().getBedSpawnLocation().getWorld()
-				.equals(LobbyAPI.getLobbyWorld(lb.getRespawnWorld()).getWorld()))*/))
+					&& (event.getPlayer().getBedSpawnLocation().getWorld().equals(lb.getWorld())))
 				return;
 		} catch (Error | Exception e231124) {
 		}
-		// Do not interfere if the player has a bed in this world.
-
-		//if (lb.getRespawnWorld() != null) {
-		//	event.setRespawnLocation(LobbyAPI.getLobbyWorld(lb.getRespawnWorld()).getSpawn());
-		//} else {
 		event.setRespawnLocation(lb.getSpawn());
-		// Should never happen. Test it
-		//}
 	}
 
 	@EventHandler
@@ -363,13 +370,13 @@ public class Main extends JavaPlugin implements Listener {
 					if (event.getPlayer() != null && LobbyWorld.getMainLobby() != null
 							&& LobbyWorld.getMainLobby().getSpawn() != null) {
 						event.getPlayer().teleport(LobbyWorld.getMainLobby().getSpawn());
+						lastWorld.put(event.getPlayer().getName(), LobbyWorld.getMainLobby().getWorld());
 						cancel();
 					}
 				}
 			}.runTaskTimer(this, 0, 5);
 		}
-		for (LobbyWorld wo : LobbyWorld.getLobbyWorlds())
-			lastWorld.put(event.getPlayer().getName(), wo.hasMainWorld() ? wo.getWorld() : goingTo);
+			lastWorld.put(event.getPlayer().getName(), event.getPlayer().getWorld());
 	}
 
 	@EventHandler
@@ -462,40 +469,43 @@ public class Main extends JavaPlugin implements Listener {
 	@EventHandler(priority = EventPriority.LOWEST)
 	private void onWorldchange(PlayerChangedWorldEvent event) {
 		final Player p = event.getPlayer();
-		saveInventory(p, event.getFrom());
 		final LobbyWorld lw = LobbyAPI.getLobbyWorld(p.getWorld());
 		final LobbyWorld lwF = LobbyAPI.getLobbyWorld(event.getFrom());
-		final boolean sameWorld = (lw == lwF);
+
+		saveInventory(p, lwF);
 
 		lastWorld.put(p.getName(), p.getWorld());
 
 		if (lw != null) {
 			if (enablePWI)
+				if(lwF == null || (!lwF.getSaveName().equals(lw.getSaveName())))
 				clearInventory(p);
 		}
+
+
 		new BukkitRunnable() {
 			public void run() {
 				LobbyWorld lfT = LobbyAPI.getLobbyWorld(p.getWorld());
-				if (lfT != null) {
-					if (enablePWI) {
-						// if (!sameWorld) {
-						clearInventory(p);
-						loadInventory(p, p.getWorld());
-						// }
-					}
-					if (lfT.getGameMode() != null && !lfT.getSaveName().equals(lwF.getSaveName()))
-						p.setGameMode(lfT.getGameMode());
+				if(lwF == null || (!lwF.getSaveName().equals(lw.getSaveName()))) {
+					if (lfT != null) {
+						if (enablePWI) {
+							clearInventory(p);
+							loadInventory(p, lfT);
+						}
+						if (lfT.getGameMode() != null && !lfT.getSaveName().equals(lwF.getSaveName()))
+							p.setGameMode(lfT.getGameMode());
 
-					if (lfT.getSpawnItems() != null && lfT.getSpawnItems().size() > 0)
-						for (ItemStack is : lfT.getSpawnItems())
-							if (is != null)
-								if (!p.getInventory().containsAtLeast(is, 1))
-									p.getInventory().addItem(is);
+						if (lfT.getSpawnItems() != null && lfT.getSpawnItems().size() > 0)
+							for (ItemStack is : lfT.getSpawnItems())
+								if (is != null)
+									if (!p.getInventory().containsAtLeast(is, 1))
+										p.getInventory().addItem(is);
+					}
 				}
 
 				lastWorld.put(p.getName(), p.getWorld());
 			}
-		}.runTaskLater(this, 2);
+		}.runTaskLater(this, 12);
 
 	}
 
