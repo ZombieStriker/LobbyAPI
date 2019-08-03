@@ -456,9 +456,11 @@ public class Main extends JavaPlugin implements Listener {
 		}
 
 		if(portal!=null){
-			if(!portal.getBlock().getType().name().endsWith("PORTAL")){
-				NetherPortalFinder.locate(portal);
-			}
+			try {
+				if (!portal.getBlock().getType().name().endsWith("PORTAL")) {
+					NetherPortalFinder.locate(portal);
+				}
+			}catch (Error|Exception e4){}
 			return portal;
 		}
 
@@ -470,33 +472,33 @@ public class Main extends JavaPlugin implements Listener {
 	private void onWorldchange(PlayerChangedWorldEvent event) {
 		final Player p = event.getPlayer();
 		final LobbyWorld lw = LobbyAPI.getLobbyWorld(p.getWorld());
-		final LobbyWorld lwF = LobbyAPI.getLobbyWorld(event.getFrom());
+		final LobbyWorld lwFrom = LobbyAPI.getLobbyWorld(event.getFrom());
 
-		saveInventory(p, lwF);
+		saveInventory(p, lwFrom);
 
 		lastWorld.put(p.getName(), p.getWorld());
 
 		if (lw != null) {
 			if (enablePWI)
-				if(lwF == null || (!lwF.getSaveName().equals(lw.getSaveName())))
+				if(lwFrom == null || (!lwFrom.getSaveName().equals(lw.getSaveName())))
 				clearInventory(p);
 		}
 
 
 		new BukkitRunnable() {
 			public void run() {
-				LobbyWorld lfT = LobbyAPI.getLobbyWorld(p.getWorld());
-				if(lwF == null || (!lwF.getSaveName().equals(lw.getSaveName()))) {
-					if (lfT != null) {
+				LobbyWorld lwTo = LobbyAPI.getLobbyWorld(p.getWorld());
+				if(lwFrom == null || (!lwFrom.getSaveName().equals(lwTo.getSaveName()))) {
+					if (lwTo != null) {
 						if (enablePWI) {
 							clearInventory(p);
-							loadInventory(p, lfT);
+							loadInventory(p, lwTo);
 						}
-						if (lfT.getGameMode() != null && !lfT.getSaveName().equals(lwF.getSaveName()))
-							p.setGameMode(lfT.getGameMode());
+						if (lwTo.getGameMode() != null && !lwTo.getSaveName().equals(lwFrom.getSaveName()))
+							p.setGameMode(lwTo.getGameMode());
 
-						if (lfT.getSpawnItems() != null && lfT.getSpawnItems().size() > 0)
-							for (ItemStack is : lfT.getSpawnItems())
+						if (lwTo.getSpawnItems() != null && lwTo.getSpawnItems().size() > 0)
+							for (ItemStack is : lwTo.getSpawnItems())
 								if (is != null)
 									if (!p.getInventory().containsAtLeast(is, 1))
 										p.getInventory().addItem(is);
@@ -1044,6 +1046,7 @@ public class Main extends JavaPlugin implements Listener {
 								getConfig().set("Worlds." + key + ".loc", null);
 								saveConfig();
 							}
+
 							double x = getConfig().getDouble("Worlds." + key + ".spawnLoc.x");
 							double y = getConfig().getDouble("Worlds." + key + ".spawnLoc.y");
 							double z = getConfig().getDouble("Worlds." + key + ".spawnLoc.z");

@@ -1,3 +1,7 @@
+3.7.96
+    Fixed portals for unloaded worlds
+    Fixed plugin version.
+
 3.7.95
     Added possible fix for inventories not saving in the end.
     Added fix for enderchests in unregistered worlds
