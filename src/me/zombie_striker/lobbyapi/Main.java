@@ -17,6 +17,7 @@ package me.zombie_striker.lobbyapi;
 
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
+import com.google.gson.internal.$Gson$Types;
 import me.zombie_striker.lobbyapi.LobbyWorld.WeatherState;
 import me.zombie_striker.lobbyapi.utils.*;
 import me.zombie_striker.lobbyapi.utils.ConfigHandler.ConfigKeys;
@@ -62,7 +63,9 @@ public class Main extends JavaPlugin implements Listener {
 	private boolean enablePWI = true;
 	private ItemStack worldSelector = null;
 
-	private boolean enableCustomEnderchestss = true;
+	private boolean enableCustomEnderchests = true;
+
+	private boolean enableTeleportToSpawnIfSameWorld = true;
 
 	public static String getPrefix() {
 		return prefix;
@@ -167,10 +170,17 @@ public class Main extends JavaPlugin implements Listener {
 			ConfigHandler.setLobbyAPIVariable(ConfigKeys.ENABLE_PER_WORLD_INVENTORIES, true);
 		}
 		if (!ConfigHandler.containsLobbyAPIVariable(ConfigKeys.PER_WORLD_ENNDERCHESTS)) {
-			ConfigHandler.setLobbyAPIVariable(ConfigKeys.PER_WORLD_ENNDERCHESTS, enableCustomEnderchestss);
+			ConfigHandler.setLobbyAPIVariable(ConfigKeys.PER_WORLD_ENNDERCHESTS, enableCustomEnderchests);
+		}
+		if (!ConfigHandler.containsLobbyAPIVariable(ConfigKeys.TELEPORTTOSPAWN)) {
+			ConfigHandler.setLobbyAPIVariable(ConfigKeys.TELEPORTTOSPAWN, enableTeleportToSpawnIfSameWorld);
 		}
 
 		enablePWI = ConfigHandler.getLobbyAPIVariableBoolean(ConfigKeys.ENABLE_PER_WORLD_INVENTORIES);
+		enableCustomEnderchests= ConfigHandler.getLobbyAPIVariableBoolean(ConfigKeys.ENABLE_PER_WORLD_INVENTORIES);
+		enableTeleportToSpawnIfSameWorld= ConfigHandler.getLobbyAPIVariableBoolean(ConfigKeys.TELEPORTTOSPAWN);
+
+
 		Plugin minv = Bukkit.getPluginManager().getPlugin("Multiverse-Inventories");
 		if (minv != null) {
 			Bukkit.getPluginManager().disablePlugin(minv);
@@ -178,7 +188,7 @@ public class Main extends JavaPlugin implements Listener {
 					+ " LobbyAPI is incompatible with Multiverse-Inventories. Remove Multiverse-Inventories, as LobbyAPI should handle multiple inventories");
 		}
 		Plugin pwi = Bukkit.getPluginManager().getPlugin("PerWorldInventory");
-		if (pwi != null) {
+		if (enablePWI && pwi != null) {
 			Bukkit.getPluginManager().disablePlugin(pwi);
 			Bukkit.broadcastMessage(prefix
 					+ " LobbyAPI is incompatible with PerWorldInventory. Remove PerWorldInventory, as LobbyAPI should handle multiple inventories");
@@ -228,19 +238,7 @@ public class Main extends JavaPlugin implements Listener {
 
 		@SuppressWarnings("unused")
 		Metrics met = new Metrics(this);
-		/*
-		 * met.addCustomChart(new Metrics.SimplePie("worlds-loaded") {
-		 *
-		 * @Override public String getValue() { return String.valueOf(worlds.size()); }
-		 * }); met.addCustomChart(new Metrics.SimplePie("bungee-support") {
-		 *
-		 * @Override public String getValue() { return
-		 * String.valueOf(bungeeServers.size()); } }); met.addCustomChart(new
-		 * Metrics.SimplePie("updater-active") {
-		 *
-		 * @Override public String getValue() { return
-		 * String.valueOf(getConfig().getBoolean("auto-update")); } });
-		 */
+
 		if (!getConfig().contains("Version")
 				|| !getConfig().getString("Version").equals(this.getDescription().getVersion())) {
 			new UpdateAnouncer(this);
@@ -295,7 +293,7 @@ public class Main extends JavaPlugin implements Listener {
 				&& e.getPlayer().getItemInHand().isSimilar(getWorldSelector()))
 			Bukkit.dispatchCommand(e.getPlayer(), "lobby");
 
-		if(enableCustomEnderchestss) {
+		if(enableCustomEnderchests) {
 		LobbyWorld lw = LobbyAPI.getLobbyWorld(e.getPlayer().getWorld());
 		if(lw !=null) {
 			if (e.getClickedBlock() != null && e.getClickedBlock().getType() == Material.ENDER_CHEST) {
@@ -310,7 +308,7 @@ public class Main extends JavaPlugin implements Listener {
 
 	@EventHandler
 	public void onClose(InventoryCloseEvent e) {
-		if(enableCustomEnderchestss) {
+		if(enableCustomEnderchests) {
 			LobbyWorld lw = LobbyAPI.getLobbyWorld(e.getPlayer().getWorld());
 			if (lw != null) {
 				if (e.getView().getTitle().equals("Ender Chest")) {
@@ -568,7 +566,7 @@ public class Main extends JavaPlugin implements Listener {
 											(Player) event.getWhoClicked(), wo);
 
 									Location lastLoc;
-									if(wo.getSpawn().getWorld()==event.getWhoClicked().getWorld()){
+									if(enableTeleportToSpawnIfSameWorld && wo.getSpawn().getWorld()==event.getWhoClicked().getWorld()){
 										e.setDestination(wo.getSpawn());
 									}else {
 										if ((lastLoc = getLastLocationForWorld((Player) event.getWhoClicked(), wo)) != null) {

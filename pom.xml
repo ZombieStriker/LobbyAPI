@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>me.zombie_striker</groupId>
     <artifactId>LobbyAPI</artifactId>
-    <version>3.7.96</version>
+    <version>3.7.97</version>
     <repositories>
 
         <repository>

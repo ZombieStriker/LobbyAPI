@@ -1,3 +1,7 @@
+3.7.97
+    Fixed per-world-enderchest config option.
+    Added option to disable teleport-to-spawn for when the player is in the same world.
+
 3.7.96
     Fixed portals for unloaded worlds
     Fixed plugin version.

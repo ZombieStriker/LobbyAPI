@@ -20,7 +20,6 @@ permissions:
     description: Gives access that only a user should have, which is to access the hub command
     children:
       lobbyapi.hub: true
-softdepend:
-  -MultiverseCore
+softdepend: [MultiverseCore]
 author:
   Zombie_Striker
