@@ -17,6 +17,7 @@ package me.zombie_striker.lobbyapi;
 
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
+import me.zombie_striker.pluginconstructor.PluginConstructorAPI;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -29,19 +30,114 @@ import java.util.UUID;
 
 public class LobbyAPI {
 
-	private static Main ml;
+	private static Main main;
 
 	public LobbyAPI(Main mll) {
-		ml = mll;
+		main = mll;
 	}
 
 
 	public static void updateServerCount(Player player) {
-		for (LobbyServer ls : ml.getBungeeServers()) {
+		for (LobbyServer ls : main.getBungeeServers()) {
 			updateServerCount(player, ls);
 		}
 	}
 
+	public static  void openGUI(Player player){
+
+		if (main.getConfig().contains("disallowHubCommandNoPerm")
+				&& main.getConfig().getBoolean("disallowHubCommandNoPerm")
+				&& !player.hasPermission("lobbyapi.hub")) {
+			player.sendMessage(Main.getPrefix() + ChatColor.RED + "You do not have permission to access this command.");
+			return;
+		}
+
+		main.setInventorySize(false);
+		main.inventory = main.getServer().createInventory(null, main.inventorySize, main.title);
+
+		main.setLastLocationForWorld(player);
+
+
+		for (LobbyWorld wo : LobbyWorld.getLobbyWorlds()) {
+			if (wo != null) {
+				if (wo.isHidden())
+					continue;
+
+				List<String> ls = new ArrayList<String>();
+				if (wo == LobbyWorld.getMainLobby())
+					ls.add(ChatColor.BOLD + "" + ChatColor.YELLOW + "Main World");
+				ls.addAll(wo.getDescription());
+				Set<Player> players = wo.getPlayers();
+				if (wo.getNether() != null)
+					players.addAll(wo.getNether().getPlayers());
+				if (wo.getEnd() != null)
+					players.addAll(wo.getEnd().getPlayers());
+
+				String players2 = ChatColor.GOLD + "" + players.size() + " Players ";
+				if (wo.hasMaxPlayers()) {
+					players2 = ChatColor.GOLD + "" + players.size() + " out of " + wo.getMaxPlayers();
+				}
+				ls.add(players2);
+
+				for (Player s : players) {
+					if (s.equals(player))
+						ls.add(ChatColor.WHITE + s.getName());
+					else
+						ls.add(ChatColor.GRAY + s.getName());
+				}
+
+				if (!wo.isPrivate() || wo.getWhitelistedPlayersUUID().contains(player.getUniqueId())) {
+					ItemStack is = LobbyAPI.setName(wo.getDisplayName(), wo.getColor(), wo.getMaterial(), ls);
+					is.setAmount(wo.getAmount());
+					if (player.getWorld().equals(wo.getWorld())) {
+						try {
+							// me.zombie_striker.pluginconstructor.InWorldGlowEnchantment pps = new
+							// me.zombie_striker.pluginconstructor.InWorldGlowEnchantment(
+							// m.enchID);
+							is.addEnchantment(PluginConstructorAPI.registerGlowEnchantment(), 1);
+						} catch (Error | Exception e) {
+
+						}
+					}
+					main.inventory.setItem(wo.getSlot(), is);
+				}
+
+			}
+		}
+		for (LobbyDecor d : main.decor) {
+			Material mk = d.getMaterial();
+			if (mk == null || mk == Material.AIR)
+				mk = Material.BARRIER;
+
+			ItemStack material = new ItemStack(mk);
+			material.setAmount(d.getAmount());
+			material.setDurability(d.getData());
+			ItemMeta im = material.getItemMeta();
+			im.setDisplayName(d.getDisplayname());
+			im.setLore(d.getLore());
+			material.setItemMeta(im);
+			main.inventory.setItem(d.getSlot(), material);
+		}
+		for (LobbyServer lb : main.bungeeServers) {
+			if (!lb.isHidden()) {
+				List<String> ls = new ArrayList<String>();
+				ls.add(ChatColor.RED + "" + ChatColor.GREEN + ChatColor.GOLD + "BungeeCord Server");
+
+				ls.addAll(lb.getLore());
+
+				LobbyAPI.updateServerCount(player, lb);
+
+				String players2 = ChatColor.GOLD + "" + lb.getPlayerCount() + " Players ";
+				ls.add(players2);
+				ItemStack is = LobbyAPI.setName(lb.getDisplayName(), lb.getColor(), lb.getMaterial(), ls);
+
+				is.setAmount(lb.getAmount());
+				main.inventory.setItem(lb.getSlot(), is);
+			}
+		}
+
+		player.openInventory(main.inventory);
+	}
 	public static void updateServerCount(Player player, LobbyServer ls) {
 		ByteArrayDataOutput baos = ByteStreams.newDataOutput();
 		try {
@@ -51,7 +147,7 @@ public class LobbyAPI {
 			e.printStackTrace();
 		}
 		try {
-			player.sendPluginMessage(ml, "BungeeCord", baos.toByteArray());
+			player.sendPluginMessage(main, "BungeeCord", baos.toByteArray());
 		}catch (Error|Exception e4){}
 	}
 
@@ -415,7 +511,7 @@ public class LobbyAPI {
 	 * @param ls
 	 */
 	public static void addBungeeServer(LobbyServer ls) {
-		ml.getBungeeServers().add(ls);
+		main.getBungeeServers().add(ls);
 	}
 
 	/**
@@ -425,7 +521,7 @@ public class LobbyAPI {
 	 * @return the LobbyServer instance
 	 */
 	public static LobbyServer getServer(String name) {
-		for (LobbyServer ls : ml.getBungeeServers()) {
+		for (LobbyServer ls : main.getBungeeServers()) {
 			if (ls.getName().equals(name))
 				return ls;
 		}
@@ -439,7 +535,7 @@ public class LobbyAPI {
 	 * @return
 	 */
 	public static boolean removeBungeeServer(String name) {
-		return ml.getBungeeServers().remove(ml.getBungeeServer(name));
+		return main.getBungeeServers().remove(main.getBungeeServer(name));
 
 	}
 
@@ -726,7 +822,7 @@ public class LobbyAPI {
 				}
 			}
 			if (!isTaken) {
-				for (LobbyServer ls : ml.getBungeeServers()) {
+				for (LobbyServer ls : main.getBungeeServers()) {
 					if (openslot == ls.getSlot()) {
 						isTaken = true;
 						break;

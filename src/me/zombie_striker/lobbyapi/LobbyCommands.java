@@ -785,11 +785,11 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 						LobbyWorld lw = LobbyAPI.registerWorldFromConfig(wo, l, savename, wo.getName(), 0, i,
 								GameMode.SURVIVAL, false);
 						String fi = wo.getName();
-						if (m.getConfig().contains("Worlds." + fi)) {
+						/*if (m.getConfig().contains("Worlds." + fi)) {
 							sender.sendMessage(prefix
 									+ " The config already has registered this world, even though LobbyAPI has not. This should not happen, but if it did, report this to Zombie_Striker on the bukkitdev page: https://dev.bukkit.org/projects/lobbyapi");
 							return false;
-						}
+						}*/
 						saveWorld(fi, savename, wo, l, 0, i, false);
 						sender.sendMessage(prefix + "Added world \"" + wo.getName() + "\" with a slot of " + i
 								+ ": Spawn at " + x + " " + y + " " + z + ".");
@@ -1264,7 +1264,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					LobbyAPI.registerBungeeServerFromConfig(server, i, color);
 					if (m.getConfig().contains("Server." + server)) {
 						sender.sendMessage(prefix
-								+ " The config already has registered this world, even though LobbyAPI has not. This should not happen, but if it did, report this to Zombie_Striker on the bukkitdev page: https://dev.bukkit.org/projects/lobbyapi");
+								+ " The config already has registered this server, even though LobbyAPI has not. This should not happen, but if it did, report this to Zombie_Striker on the bukkitdev page: https://dev.bukkit.org/projects/lobbyapi");
 						return false;
 					}
 					m.getConfig().set("Server." + server + ".name", server);
@@ -1351,99 +1351,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 
 			if (sender instanceof Player) {
 				Player player = (Player) sender;
-
-				if (m.getConfig().contains("disallowHubCommandNoPerm")
-						&& m.getConfig().getBoolean("disallowHubCommandNoPerm")
-						&& !player.hasPermission("lobbyapi.hub")) {
-					sender.sendMessage(prefix + ChatColor.RED + "You do not have permission to access this command.");
-					return false;
-				}
-
-				m.setInventorySize(false);
-				m.inventory = m.getServer().createInventory(null, m.inventorySize, m.title);
-
-				m.setLastLocationForWorld(player);
-
-
-				for (LobbyWorld wo : LobbyWorld.getLobbyWorlds()) {
-					if (wo != null) {
-						if (wo.isHidden())
-							continue;
-
-						List<String> ls = new ArrayList<String>();
-						if (wo == LobbyWorld.getMainLobby())
-							ls.add(ChatColor.BOLD + "" + ChatColor.YELLOW + "Main World");
-						ls.addAll(wo.getDescription());
-						Set<Player> players = wo.getPlayers();
-						if (wo.getNether() != null)
-							players.addAll(wo.getNether().getPlayers());
-						if (wo.getEnd() != null)
-							players.addAll(wo.getEnd().getPlayers());
-
-						String players2 = ChatColor.GOLD + "" + players.size() + " Players ";
-						if (wo.hasMaxPlayers()) {
-							players2 = ChatColor.GOLD + "" + players.size() + " out of " + wo.getMaxPlayers();
-						}
-						ls.add(players2);
-
-						for (Player s : players) {
-							if (s.equals(player))
-								ls.add(ChatColor.WHITE + s.getName());
-							else
-								ls.add(ChatColor.GRAY + s.getName());
-						}
-
-						if (!wo.isPrivate() || wo.getWhitelistedPlayersUUID().contains(player.getUniqueId())) {
-							ItemStack is = LobbyAPI.setName(wo.getDisplayName(), wo.getColor(), wo.getMaterial(), ls);
-							is.setAmount(wo.getAmount());
-							if (player.getWorld().equals(wo.getWorld())) {
-								try {
-									// me.zombie_striker.pluginconstructor.InWorldGlowEnchantment pps = new
-									// me.zombie_striker.pluginconstructor.InWorldGlowEnchantment(
-									// m.enchID);
-									is.addEnchantment(PluginConstructorAPI.registerGlowEnchantment(), 1);
-								} catch (Error | Exception e) {
-
-								}
-							}
-							m.inventory.setItem(wo.getSlot(), is);
-						}
-
-					}
-				}
-				for (LobbyDecor d : m.decor) {
-					Material mk = d.getMaterial();
-					if (mk == null || mk == Material.AIR)
-						mk = Material.BARRIER;
-
-					ItemStack material = new ItemStack(mk);
-					material.setAmount(d.getAmount());
-					material.setDurability(d.getData());
-					ItemMeta im = material.getItemMeta();
-					im.setDisplayName(d.getDisplayname());
-					im.setLore(d.getLore());
-					material.setItemMeta(im);
-					m.inventory.setItem(d.getSlot(), material);
-				}
-				for (LobbyServer lb : m.bungeeServers) {
-					if (!lb.isHidden()) {
-						List<String> ls = new ArrayList<String>();
-						ls.add(ChatColor.RED + "" + ChatColor.GREEN + ChatColor.GOLD + "BungeeCord Server");
-
-						ls.addAll(lb.getLore());
-
-						LobbyAPI.updateServerCount(player, lb);
-
-						String players2 = ChatColor.GOLD + "" + lb.getPlayerCount() + " Players ";
-						ls.add(players2);
-						ItemStack is = LobbyAPI.setName(lb.getDisplayName(), lb.getColor(), lb.getMaterial(), ls);
-
-						is.setAmount(lb.getAmount());
-						m.inventory.setItem(lb.getSlot(), is);
-					}
-				}
-
-				player.openInventory(m.inventory);
+	LobbyAPI.openGUI(player);
 			} else {
 				sender.sendMessage(prefix + " The sender must be a player to operate this command!");
 			}
@@ -1587,5 +1495,6 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 
 		m.saveConfig();
 	}
+
 
 }

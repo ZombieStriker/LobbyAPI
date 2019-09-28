@@ -1,3 +1,20 @@
+3.7.99
+    Updated to a new SpiGet auto-updater! Updates are now retrieved through spigot instead of github (no more errors)!
+    Auto-Updater can now be disabled
+    Auto-Updater Message will now display update message
+    Auto-Updater will no longer automatically reload server, and will download the updated file to the /update/ dir.
+    Changed world creation so it appears before server starts
+    Worlds now check to make sure the world does not exist before generating a new one.
+    Fixed default items for main/ joined world
+    Fixed worlds not being saved on shutdown
+
+3.7.98
+    Fixed way lobby menu is created
+    Fixed Item rendering glitch when going through portals
+    Fixed item removal glitch on specific world transfer
+    Fixed end portal not teleporting player to right location.
+    Changed way advancements are stored. Player files should be much smaller
+
 3.7.97
     Fixed per-world-enderchest config option.
     Added option to disable teleport-to-spawn for when the player is in the same world.
