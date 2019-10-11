@@ -187,25 +187,19 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 						bWorld(tab, args[1]);
 					}
 					if (args.length == 3) {
-						tab.add("Slot");
-					}
-					if (args.length == 4)
-						tab.add("X");
-					if (args.length == 5)
-						tab.add("Y");
-					if (args.length == 6)
-						tab.add("Z");
-
-					if (args.length == 7) {
-						tab.add(m.random.nextInt(15) + "");
-						tab.add("~");
+						tab.add(LobbyAPI.getOpenSlot(0)+"");
 					}
 
-					if (args.length == 8) {
+					if (args.length == 4) {
 						for (LobbyWorld wo : LobbyWorld.getLobbyWorlds())
 							if (!tab.contains(wo.getSaveName()))
 								tab.add(wo.getSaveName());
 					}
+					if (args.length == 5) {
+						tab.add(m.random.nextInt(15) + "");
+						tab.add("~");
+					}
+
 				}
 				if (args[0].equalsIgnoreCase("addserver")) {
 					if (args.length == 2) {
@@ -731,8 +725,8 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 							sender.sendMessage(prefix
 									+ " This world does not exist. Creating world using LobbyAPI WorldGenerator");
 							WorldCreator wc = new WorldCreator(name);
-							if (args.length >= 9) {
-								wc.seed(Long.parseLong(args[8]));
+							if (args.length >= 6) {
+								wc.seed(Long.parseLong(args[5]));
 							}
 
 							wo = Bukkit.createWorld(wc);
@@ -745,62 +739,22 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 						return false;
 					}
 					int i = LobbyAPI.getOpenSlot(Integer.parseInt(args[2]));
-					double x = 0;
-					double y = 100;
-					double z = 0;
-					if (args[3].contains("~"))
-						if (!(sender instanceof Player))
-							x = 0;
-						else
-							x = ((Player) sender).getLocation().getX();
-					else
-						x = Double.parseDouble(args[3]);
-
-					if (args[4].contains("~"))
-						if (!(sender instanceof Player))
-							y = 0;
-						else
-							y = ((Player) sender).getLocation().getY();
-					else
-						y = Double.parseDouble(args[4]);
-
-					if (args[5].contains("~"))
-						if (!(sender instanceof Player))
-							z = 0;
-						else
-							z = ((Player) sender).getLocation().getZ();
-					else
-						z = Double.parseDouble(args[5]);
 					String savename = wo.getName();
-					if (args.length >= 7) {
-						savename = args[6];
-					}
+					if (args.length >= 4)
+						savename = args[3];
+					boolean genNether = false;
+					if (args.length >= 5)
+						genNether = Boolean.parseBoolean(args[4]);
+
 
 					if (wo != null) {
-						Location l = new Location(wo, x, y, z);
-						if (sender instanceof Player) {
-							l.setYaw(((Player) sender).getLocation().getYaw());
-							l.setPitch(((Player) sender).getLocation().getPitch());
-						}
-						LobbyWorld lw = LobbyAPI.registerWorldFromConfig(wo, l, savename, wo.getName(), 0, i,
+						LobbyWorld lw = LobbyAPI.registerWorldFromConfig(wo, wo.getSpawnLocation(), savename, wo.getName(), 0, i,
 								GameMode.SURVIVAL, false);
 						String fi = wo.getName();
-						/*if (m.getConfig().contains("Worlds." + fi)) {
-							sender.sendMessage(prefix
-									+ " The config already has registered this world, even though LobbyAPI has not. This should not happen, but if it did, report this to Zombie_Striker on the bukkitdev page: https://dev.bukkit.org/projects/lobbyapi");
-							return false;
-						}*/
-						saveWorld(fi, savename, wo, l, 0, i, false);
-						sender.sendMessage(prefix + "Added world \"" + wo.getName() + "\" with a slot of " + i
-								+ ": Spawn at " + x + " " + y + " " + z + ".");
+						saveWorld(fi, savename, wo, wo.getSpawnLocation(), 0, i, false);
+						sender.sendMessage(prefix + "Added world \"" + wo.getName() + "\" with a slot of " + i);
 
-						boolean genNether = false;
-						if (args.length >= 9) {
-							genNether = Boolean.parseBoolean(args[7]);
-						}
 						if (genNether) {
-							// if (Bukkit.getWorlds().get(0).equals(wo)) {
-							// If the wo is the main world
 							sender.sendMessage(prefix
 									+ "The nether and end world will be registered and linked to this world if they have not been registered already.");
 							generateConnctingWorlds(lw);
@@ -809,17 +763,14 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					}
 				} else {
 					sender.sendMessage(prefix + " Usage:" + ChatColor.BOLD
-							+ " /LobbyAPI addword [name] [slot] [x] [y] [z] [savename] [seed] [shouldGenerateNether]");
+							+ " /LobbyAPI addword [name] [slot] [savename] [shouldGenerateNether] [seed] ");
 					sender.sendMessage(prefix + " [name] = The world's name (it is Case Sensitive)");
 					sender.sendMessage(prefix + " [slot] = The slot in the menu for the world");
-					sender.sendMessage(prefix + " [x] = The world's spawn's X location");
-					sender.sendMessage(prefix + " [y] = The world's spawn's Y location");
-					sender.sendMessage(prefix + " [z] = The world's spawn's z location");
 					sender.sendMessage(prefix
 							+ " [savename] = OPTIONAL: The name of inventory save (only useful if you wish for multiple worlds to have the same inventory)");
-					sender.sendMessage(prefix + " [seed] = OPTIONAL: The seed for the world");
 					sender.sendMessage(prefix
 							+ " [shouldGenerateNether] = OPTIONAL: True or false: Whether LobbyAPI should allow that world to have a nether");
+					sender.sendMessage(prefix + " [seed] = OPTIONAL: The seed for the world");
 				}
 
 			} else if (args[0].equalsIgnoreCase("removeWorldSelector")) {

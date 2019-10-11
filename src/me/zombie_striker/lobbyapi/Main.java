@@ -368,6 +368,7 @@ public class Main extends JavaPlugin implements Listener {
 							&& LobbyWorld.getMainLobby().getSpawn() != null) {
 						event.getPlayer().teleport(LobbyWorld.getMainLobby().getSpawn());
 						lastWorld.put(event.getPlayer().getName(), LobbyWorld.getMainLobby().getWorld());
+						if(LobbyWorld.getMainLobby()!=null && LobbyWorld.getMainLobby().getSpawnItems()!=null)
 						for (ItemStack is : LobbyWorld.getMainLobby().getSpawnItems())
 							if (is != null)
 								if (!event.getPlayer().getInventory().containsAtLeast(is, is.getAmount()))
@@ -725,20 +726,28 @@ public class Main extends JavaPlugin implements Listener {
 		if (config.contains(p.getName() + "." + s + ".i")) {
 			for (int i = 0; i < p.getInventory().getSize(); i++) {
 				if (config.contains(p.getName() + "." + s + ".i." + i)) {
-					ItemStack temp = (ItemStack) config.get(p.getName() + "." + s + ".i." + i);
-					if (!temp.equals(p.getInventory().getItem(i))) {
-						p.getInventory().setItem(i, temp);
+					Object item = config.get(p.getName() + "." + s + ".i." + i);;
+					if(item instanceof ItemStack) {
+						ItemStack temp = (ItemStack) item;
+						if (!temp.equals(p.getInventory().getItem(i))) {
+							p.getInventory().setItem(i, temp);
+						}
+					}else if (item instanceof String){
+						String[] b = ((String)item).split(",");
+						ItemStack recreate = new ItemStack(Material.matchMaterial(b[0]));
+						if(b.length > 1)
+						recreate.setAmount(Integer.parseInt(b[1]));
+						if(b.length > 2)
+						recreate.setDurability(Short.parseShort(b[2]));
+						if (!recreate.equals(p.getInventory().getItem(i))) {
+							p.getInventory().setItem(i, recreate);
+						}
 					}
 				} else {
 					if (p.getInventory().getItem(i) != null)
 						p.getInventory().setItem(i, new ItemStack(Material.AIR));
 				}
 			}
-			/*for (String key : config.getConfigurationSection(p.getName() + "." + s + ".i").getKeys(false)) {
-				if (!key.equals("offhand"))
-					p.getInventory().setItem(Integer.parseInt(key),
-							(ItemStack) config.get(p.getName() + "." + s + ".i." + key));
-			}*/
 		}
 		p.getInventory().setBoots((ItemStack) config.get(p.getName() + "." + s + ".a." + 1));
 		p.getInventory().setLeggings((ItemStack) config.get(p.getName() + "." + s + ".a." + 2));
@@ -792,7 +801,12 @@ public class Main extends JavaPlugin implements Listener {
 				for (org.bukkit.advancement.Advancement a = it.next(); it.hasNext(); a = it.next()) {
 					if (a.getKey().getKey().startsWith("recipes"))
 						continue;
-					if (config.contains(p.getName() + "." + s + ".advancements." + a.getKey().getKey() + ".awarded")) {
+					if (config.contains(p.getName() + "." + s + ".advancements." + a.getKey().getKey() + ".won")) {
+						org.bukkit.advancement.AdvancementProgress progress = p.getAdvancementProgress(a);
+						for (String adv : new ArrayList<>(progress.getRemainingCriteria())) {
+									progress.awardCriteria(adv);
+						}
+					}else if (config.contains(p.getName() + "." + s + ".advancements." + a.getKey().getKey() + ".awarded")) {
 						Collection<String> awarded = config.getStringList(p.getName() + "." + s + ".advancements." + a.getKey().getKey() + ".awarded");
 						org.bukkit.advancement.AdvancementProgress progress = p.getAdvancementProgress(a);
 						for (String adv : a.getCriteria()) {
@@ -804,7 +818,7 @@ public class Main extends JavaPlugin implements Listener {
 									progress.revokeCriteria(adv);
 							}
 						}
-					} else {
+					} else if (config.contains(p.getName() + "." + s + ".advancements." + a.getKey().getKey() + ".remaining")) {
 						Collection<String> remaining = config.getStringList(p.getName() + "." + s + ".advancements." + a.getKey().getKey() + ".remaining");
 						org.bukkit.advancement.AdvancementProgress progress = p.getAdvancementProgress(a);
 						for (String adv : a.getCriteria()) {
@@ -815,6 +829,12 @@ public class Main extends JavaPlugin implements Listener {
 								if (progress.getAwardedCriteria().contains(adv))
 									progress.revokeCriteria(adv);
 							}
+						}
+					}else{
+						//Is not in config. Player was not rewarded
+						org.bukkit.advancement.AdvancementProgress progress = p.getAdvancementProgress(a);
+						for (String adv : new ArrayList<>(progress.getAwardedCriteria())) {
+							progress.revokeCriteria(adv);
 						}
 					}
 				}
@@ -997,8 +1017,22 @@ public class Main extends JavaPlugin implements Listener {
 		}
 		ItemStack[] is = p.getInventory().getContents();
 		config.set(p.getName() + "." + world2 + ".i", null);
-		for (int itemIndex = 0; itemIndex < 36; itemIndex++)
-			config.set(p.getName() + "." + world2 + ".i." + itemIndex, is[itemIndex]);
+		for (int itemIndex = 0; itemIndex < 36; itemIndex++) {
+			if(is[itemIndex]!=null) {
+				if (is[itemIndex].hasItemMeta()) {
+					config.set(p.getName() + "." + world2 + ".i." + itemIndex, is[itemIndex]);
+				} else {
+					String saveStuff = "";
+					saveStuff+=(is[itemIndex].getType().name());
+					if (is[itemIndex].getDurability() > 0) {
+						saveStuff+=("," + is[itemIndex].getAmount() + "," + is[itemIndex].getDurability());
+					} else if (is[itemIndex].getAmount() > 1) {
+						saveStuff+=("," + is[itemIndex].getAmount());
+					}
+					config.set(p.getName() + "." + world2 + ".i." + itemIndex, saveStuff);
+				}
+			}
+		}
 
 		try {
 			if (p.getInventory().getItemInOffHand() == null
@@ -1028,7 +1062,12 @@ public class Main extends JavaPlugin implements Listener {
 				if (a.getKey().getKey().startsWith("recipes"))
 					continue;
 				org.bukkit.advancement.AdvancementProgress pro = p.getAdvancementProgress(a);
-				if (pro.getRemainingCriteria().size() > pro.getAwardedCriteria().size()) {
+
+				if(pro.getRemainingCriteria().size()<=0){
+					config.set(p.getName() + "." + world2 + ".advancements." + a.getKey().getKey() + ".won", "");
+				}else if (pro.getAwardedCriteria().size() <=0){
+					//Do not save if player has no reward crit
+				}else if (pro.getRemainingCriteria().size() > pro.getAwardedCriteria().size()) {
 					config.set(p.getName() + "." + world2 + ".advancements." + a.getKey().getKey() + ".awarded", new ArrayList<String>(pro.getAwardedCriteria()));
 				} else {
 					config.set(p.getName() + "." + world2 + ".advancements." + a.getKey().getKey() + ".remaining", new ArrayList<String>(pro.getRemainingCriteria()));

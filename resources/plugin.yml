@@ -21,5 +21,6 @@ permissions:
     children:
       lobbyapi.hub: true
 softdepend: [MultiverseCore]
+load: POSTWORLD
 author:
   Zombie_Striker

@@ -1,3 +1,10 @@
+3.7.100
+    Added plugin.yml setting so LobbyAPI is loaded after worlds.
+    Changed /lobbyapi Addworld to remove unneeded XYZ Specifications (Now /lobbyapi addworld [name] [slot] [genNether] [seed])
+    Fixed advancements saving to reduce filesize
+    Improved saving algorithm for storing itemstacks
+    Fixed error with lobbyworlds without spawn items
+
 3.7.99
     Updated to a new SpiGet auto-updater! Updates are now retrieved through spigot instead of github (no more errors)!
     Auto-Updater can now be disabled

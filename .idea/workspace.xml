@@ -2,14 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="2eec33a9-40a7-4398-808f-a267ac35df75" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/src/me/zombie_striker/lobbyapi/utils/SpiGetUpdater.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/resources/changelog.txt" beforeDir="false" afterPath="$PROJECT_DIR$/resources/changelog.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/me/zombie_striker/lobbyapi/LobbyAPI.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/me/zombie_striker/lobbyapi/LobbyAPI.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/plugin.yml" beforeDir="false" afterPath="$PROJECT_DIR$/resources/plugin.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/me/zombie_striker/lobbyapi/LobbyCommands.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/me/zombie_striker/lobbyapi/LobbyCommands.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/me/zombie_striker/lobbyapi/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/me/zombie_striker/lobbyapi/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/me/zombie_striker/lobbyapi/utils/UpdateAnouncer.java" beforeDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
