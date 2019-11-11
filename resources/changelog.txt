@@ -1,3 +1,6 @@
+3.7.101
+    Fixed advancements crossover for new worlds.
+
 3.7.100
     Added plugin.yml setting so LobbyAPI is loaded after worlds.
     Changed /lobbyapi Addworld to remove unneeded XYZ Specifications (Now /lobbyapi addworld [name] [slot] [genNether] [seed])
