@@ -618,14 +618,18 @@ public class Main extends JavaPlugin implements Listener {
 										if (lw.getEnd() != null)
 											players.addAll(lw.getEnd().getPlayers());
 										Object[] oo = players.toArray();
-										for (int i = 0; i < (oo.length < 6 ? oo.length : 7); i++)
-											playersOnline
-													.append(((Player) oo[i]).getDisplayName()
-															+ (i != (oo.length - 1 < 7 ? oo.length - 1 : 7) ? " ,"
-															: (oo.length - 7 > 0
-															? " ...(" + (oo.length - 7) + " more)"
-															: "")));
 
+										if (oo.length > 7){
+											for( int i = 0; i < 6; i++){
+												playersOnline.append(((Player) oo[i]).getDisplayName()+", ");
+											}
+											playersOnline.append("...("+(oo.length-7)+" more)");
+										}else{
+											for( int i = 0; i < oo.length-1; i++){
+												playersOnline.append(((Player) oo[i]).getDisplayName()+", ");
+											}
+											playersOnline.append(((Player) oo[oo.length-1]).getDisplayName());
+										}
 										try {
 											Method method = e.getPlayer().getClass().getMethod("sendTitle",
 													String.class, String.class);
