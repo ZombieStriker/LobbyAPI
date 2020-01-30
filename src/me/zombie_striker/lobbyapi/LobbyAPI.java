@@ -43,7 +43,7 @@ public class LobbyAPI {
 		}
 	}
 
-	public static  void openGUI(Player player){
+	public static void openGUI(Player player){
 
 		if (main.getConfig().contains("disallowHubCommandNoPerm")
 				&& main.getConfig().getBoolean("disallowHubCommandNoPerm")
@@ -104,6 +104,27 @@ public class LobbyAPI {
 
 			}
 		}
+		for (LobbyButton d : main.buttons) {
+			Material mk = d.getMaterial();
+			if (mk == null || mk == Material.AIR)
+				mk = Material.BARRIER;
+
+			ItemStack material = new ItemStack(mk);
+			material.setAmount(d.getAmount());
+			material.setDurability(d.getColor());
+			ItemMeta im = material.getItemMeta();
+			im.setDisplayName(d.getDisplayName());
+			List<String> lore = new ArrayList<>(d.getLore());
+			if(player.hasPermission("lobbyapi.commands")) {
+				lore.add(ChatColor.GRAY + "Commands:");
+				for (int i = 0; i < d.getCommands().size(); i++) {
+					lore.add(ChatColor.GRAY+ ""+i + ": /" + d.getCommands().get(i));
+				}
+			}
+			im.setLore(lore);
+			material.setItemMeta(im);
+			main.inventory.setItem(d.getSlot(), material);
+		}
 		for (LobbyDecor d : main.decor) {
 			Material mk = d.getMaterial();
 			if (mk == null || mk == Material.AIR)
@@ -111,9 +132,9 @@ public class LobbyAPI {
 
 			ItemStack material = new ItemStack(mk);
 			material.setAmount(d.getAmount());
-			material.setDurability(d.getData());
+			material.setDurability(d.getColor());
 			ItemMeta im = material.getItemMeta();
-			im.setDisplayName(d.getDisplayname());
+			im.setDisplayName(d.getDisplayName());
 			im.setLore(d.getLore());
 			material.setItemMeta(im);
 			main.inventory.setItem(d.getSlot(), material);
@@ -657,7 +678,7 @@ public class LobbyAPI {
 	 */
 	@Deprecated
 	public static void setWorldMenuColor(World world, Integer color) {
-		getLobbyWorld(world).setColor(Short.parseShort(color + ""));
+		getLobbyWorld(world).setData(Short.parseShort(color + ""));
 	}
 
 	/**

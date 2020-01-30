@@ -30,4 +30,9 @@ public class LobbyServer extends LobbyIcon {
 	public void setPlayerCount(int a) {
 		this.playerCount = a;
 	}
+
+	@Override
+	public String getSaveName() {
+		return getName();
+	}
 }

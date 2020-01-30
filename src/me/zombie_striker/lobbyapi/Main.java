@@ -17,7 +17,6 @@ package me.zombie_striker.lobbyapi;
 
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
-import com.google.gson.internal.$Gson$Types;
 import me.zombie_striker.lobbyapi.LobbyWorld.WeatherState;
 import me.zombie_striker.lobbyapi.utils.*;
 import me.zombie_striker.lobbyapi.utils.ConfigHandler.ConfigKeys;
@@ -53,6 +52,7 @@ public class Main extends JavaPlugin implements Listener {
 			+ ChatColor.WHITE;
 	Set<LobbyServer> bungeeServers = new HashSet<LobbyServer>();
 	Set<LobbyDecor> decor = new HashSet<LobbyDecor>();
+	Set<LobbyButton> buttons = new HashSet<>();
 
 	Random random = ThreadLocalRandom.current();
 	int inventorySize = 9;
@@ -229,6 +229,7 @@ public class Main extends JavaPlugin implements Listener {
 		loadLocalWorlds();
 		loadLocalServers();
 		loadDecor();
+		loadButtons();
 
 		if (!getConfig().contains("auto-update")) {
 			getConfig().set("auto-update", true);
@@ -265,6 +266,10 @@ public class Main extends JavaPlugin implements Listener {
 			}
 		}
 		for (LobbyDecor d : this.decor)
+			if (d.getSlot() > maxSlot)
+				maxSlot = d.getSlot();
+
+		for (LobbyButton d : this.buttons)
 			if (d.getSlot() > maxSlot)
 				maxSlot = d.getSlot();
 
@@ -542,6 +547,17 @@ public class Main extends JavaPlugin implements Listener {
 			if (inventory != null && event.getView().getTitle().equals(title)) {
 				if (event.getCurrentItem().hasItemMeta() && event.getCurrentItem().getItemMeta().hasDisplayName()) {
 					event.setCancelled(true);
+
+					if(getButtonsFromSlot(event.getSlot())!=null){
+						LobbyButton buttons = getButtonsFromSlot(event.getSlot());
+						for(String k : buttons.getCommands()){
+							Bukkit.dispatchCommand(event.getWhoClicked(),k);
+						}
+						event.getWhoClicked().closeInventory();
+						event.setCancelled(true);
+						return;
+					}
+
 
 					boolean isBungee = false;
 					if (this.bungeeServers.size() > 0) {
@@ -1119,6 +1135,25 @@ public class Main extends JavaPlugin implements Listener {
 				this.decor.add(decor);
 			}
 	}
+	public void loadButtons() {
+		if (getConfig().contains("Buttons"))
+			for (String name : getConfig().getConfigurationSection("Buttons").getKeys(false)) {
+				String displayname = getConfig().getString("Buttons." + name + ".displayname");
+				int slot = getConfig().getInt("Buttons." + name + ".slot");
+				List<String> lore = getConfig().getStringList("Buttons." + name + ".lore");
+				Material material = Material.matchMaterial(getConfig().getString("Buttons." + name + ".material"));
+				int data = getConfig().getInt("Buttons." + name + ".durib");
+
+
+				List<String> commands = getConfig().getStringList("Buttons." + name + ".commands");
+				LobbyButton button = new LobbyButton(slot, name, displayname);
+				button.setMaterial(material);
+				button.setData(Short.parseShort("" + data));
+				button.setLore(lore);
+				button.setCommands(commands);
+				this.buttons.add(button);
+			}
+	}
 
 	public void loadLocalWorlds() {
 		final Main main = this;
@@ -1200,7 +1235,14 @@ public class Main extends JavaPlugin implements Listener {
 						l.setPitch(pitch);
 					}
 
-					int i = getConfig().getInt("Worlds." + key + ".i");
+					if(getConfig().contains("Worlds." + key + ".i")){
+						getConfig().set("Worlds." + key + ".slot", getConfig().getInt("Worlds." + key + ".i"));
+						getConfig().set("Worlds." + key + ".i",null);
+						saveConfig();
+					}
+					int i = getConfig().getInt("Worlds." + key + ".slot");
+
+
 					String save = getConfig().getString("Worlds." + key + ".save");
 					if (save == null)
 						save = key;
@@ -1326,7 +1368,12 @@ public class Main extends JavaPlugin implements Listener {
 				if (getConfig().contains("Server")) {
 					for (String fi : getConfig().getConfigurationSection("Server").getKeys(false)) {
 						String s = getConfig().getString("Server." + fi + ".name");
-						int i = getConfig().getInt("Server." + fi + ".i");
+						if(getConfig().contains("Worlds." + fi + ".i")){
+							getConfig().set("Worlds." + fi + ".slot", getConfig().getInt("Worlds." + fi + ".i"));
+							getConfig().set("Worlds." + fi + ".i",null);
+							saveConfig();
+						}
+						int i = getConfig().getInt("Server." + fi + ".slot");
 						int color = getConfig().getInt("Server." + fi + ".color");
 						LobbyAPI.unregisterBungeeServer(s);
 						LobbyAPI.registerBungeeServerFromConfig(s, i, color);
@@ -1368,6 +1415,21 @@ public class Main extends JavaPlugin implements Listener {
 
 	public Set<LobbyServer> getBungeeServers() {
 		return bungeeServers;
+	}
+
+	public LobbyDecor getDecorFromSlot(int slot){
+		for(LobbyDecor d : decor){
+			if(d.getSlot()==slot)
+				return d;
+		}
+		return null;
+	}
+	public LobbyButton getButtonsFromSlot(int slot){
+		for(LobbyButton d : buttons){
+			if(d.getSlot()==slot)
+				return d;
+		}
+		return null;
 	}
 
 }

@@ -23,6 +23,7 @@ import java.util.List;
 public class LobbyIcon {
 
 	private String name;
+	private String saveName;
 	private int ID;
 
 	private String displayname;
@@ -39,6 +40,7 @@ public class LobbyIcon {
 	public LobbyIcon(boolean loadedFC, String iconName, int ID, int amount, short color) {
 		this.loadedFromConfig = loadedFC;
 		this.name = iconName;
+		this.saveName=name;
 		this.ID = ID;
 		this.amount = amount;
 		this.color = color;
@@ -72,7 +74,7 @@ public class LobbyIcon {
 		return this.color;
 	}
 
-	public void setColor(short color) {
+	public void setData(short color) {
 		this.color = color;
 	}
 
@@ -107,5 +109,32 @@ public class LobbyIcon {
 	public void setDisplayName(String displayname) {
 		this.displayname = displayname;
 	}
+
+
+	public String getSaveName() {
+		return saveName;
+	}
+
+	public void setSaveName(String savename) {
+		this.saveName = savename;
+	}
+
+
+	public static final String CONFIGPREFIX_WORLD = "Worlds";
+	public static final String CONFIGPREFIX_DECOR = "Decor";
+	public static final String CONFIGPREFIX_SERVER = "Servers";
+	public static final String CONFIGPREFIX_BUTTON = "Buttons";
+	public static String getConfigPrefix(LobbyIcon type){
+		if(type instanceof  LobbyWorld)
+			return CONFIGPREFIX_WORLD;
+		if(type instanceof  LobbyDecor)
+			return CONFIGPREFIX_DECOR;
+		if(type instanceof  LobbyServer)
+			return CONFIGPREFIX_SERVER;
+		if(type instanceof  LobbyButton)
+			return CONFIGPREFIX_BUTTON;
+		return "Null";
+	}
+
 
 }

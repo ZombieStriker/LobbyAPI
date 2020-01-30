@@ -24,7 +24,9 @@ import java.util.*;
 public class LobbyWorld extends LobbyIcon {
 
 	private static LobbyWorld MAIN_LOBBY = null;
+
 	private static Set<LobbyWorld> worlds = new HashSet<LobbyWorld>();
+
 	private Location spawn;
 	private boolean canUsePortal = false;
 	private boolean canUseEnderChest;
@@ -46,7 +48,6 @@ public class LobbyWorld extends LobbyIcon {
 	private List<ItemStack> worldItems;
 	private GameMode gamemode = null;
 	private List<String> worldDescription = new ArrayList<String>();
-	private String saveName;
 	private boolean isLobby = false;
 
 	public LobbyWorld(boolean loadedFC, String worldname, int ID, int amount, short color, Location spawn,
@@ -54,7 +55,7 @@ public class LobbyWorld extends LobbyIcon {
 		super(loadedFC, worldname, ID, amount, color);
 		this.mainWorld = Bukkit.getWorld(worldname.toLowerCase());
 		this.spawn = spawn;
-		this.saveName = saveName;
+		setSaveName(saveName);
 		this.gamemode = gm;
 	}
 
@@ -86,7 +87,6 @@ public class LobbyWorld extends LobbyIcon {
 	/**
 	 * Removes main lobby world.
 	 *
-	 * @param lw
 	 */
 	public static void removeMainLobby() {
 		MAIN_LOBBY = null;
@@ -111,7 +111,6 @@ public class LobbyWorld extends LobbyIcon {
 	/**
 	 * Sets whether a world should save the location of a world.
 	 *
-	 * @param should save the location for a world
 	 * @return
 	 */
 	public void setWorldShouldSavePlayerLocation(boolean b) {
@@ -120,8 +119,7 @@ public class LobbyWorld extends LobbyIcon {
 
 	/**
 	 * Sets whether a world should save the location of a world.
-	 *
-	 * @param should save the location for a world
+
 	 * @return
 	 */
 	public boolean shouldWorldShouldSavePlayerLocation() {
@@ -168,7 +166,6 @@ public class LobbyWorld extends LobbyIcon {
 	/**
 	 * Sets the Main lobby world to be equal to this world.
 	 *
-	 * @param lw
 	 */
 	public void setAsMainLobby() {
 		MAIN_LOBBY = this;
@@ -198,6 +195,7 @@ public class LobbyWorld extends LobbyIcon {
 		this.isLobby = b;
 	}
 
+	@Deprecated
 	public String getWorldName() {
 		return getName();
 	}
@@ -312,14 +310,6 @@ public class LobbyWorld extends LobbyIcon {
 		worldItems = i;
 	}
 
-	public String getSaveName() {
-		return saveName;
-	}
-
-	public void setSaveName(String savename) {
-		this.saveName = savename;
-	}
-
 	public List<String> getDescription() {
 		return worldDescription;
 	}
@@ -421,4 +411,5 @@ public class LobbyWorld extends LobbyIcon {
 		}
 
 	}
+
 }
