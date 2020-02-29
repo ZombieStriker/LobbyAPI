@@ -200,8 +200,8 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 			} else if (b(args[0], "setsavename")) {
 				if (args.length == 2)
 					for (LobbyWorld lw : LobbyAPI.getWorlds())
-						if (!tab.contains(lw.getSaveName()))
-							tab.add(lw.getSaveName());
+						if (!tab.contains(lw.getInventorySaveName()))
+							tab.add(lw.getInventorySaveName());
 			} else if (b(args[0], "setDisplayName")) {
 				if (args.length == 2) {
 					bLW(tab, args[1]);
@@ -258,8 +258,8 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 
 				if (args.length == 4) {
 					for (LobbyWorld wo : LobbyWorld.getLobbyWorlds())
-						if (!tab.contains(wo.getSaveName()))
-							tab.add(wo.getSaveName());
+						if (!tab.contains(wo.getInventorySaveName()))
+							tab.add(wo.getInventorySaveName());
 				}
 				if (args.length == 5) {
 					tab.add(m.random.nextInt(15) + "");
@@ -396,7 +396,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 						return false;
 					String save = args[2];
 					m.getConfig().set("Worlds." + lw.getWorldName() + ".save", save);
-					lw.setSaveName(save);
+					lw.setInventorySaveName(save);
 
 					m.saveConfig();
 					sender.sendMessage(prefix + "Save name changed to \"" + save + "\".");
@@ -600,7 +600,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 						return true;
 					}
 					lw.setSlot(index);
-					m.getConfig().set(LobbyIcon.getConfigPrefix(lw) + "." + lw.getSaveName() + ".slot", index);
+					m.getConfig().set(LobbyIcon.getConfigPrefix(lw) + "." + lw.getName() + ".slot", index);
 					m.saveConfig();
 					sender.sendMessage(prefix + "The slot for the world has been changed to " + index);
 				} else {
@@ -828,7 +828,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					List<String> g = new ArrayList<String>();
 					g.add(ChatColor.translateAlternateColorCodes('&', sb.toString()));
 					icon.setLore(g);
-					m.getConfig().set(LobbyIcon.getConfigPrefix(icon) + "." + icon.getSaveName() + ".desc", g);
+					m.getConfig().set(LobbyIcon.getConfigPrefix(icon) + "." + icon.getName() + ".desc", g);
 					m.saveConfig();
 					sender.sendMessage(prefix + "Changed icon description for icon \"" + icon.getName()
 							+ "\" to " + sb.toString() + ".");
@@ -966,7 +966,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					}
 
 					lw.setMaterial(change);
-					m.getConfig().set(LobbyIcon.getConfigPrefix(lw) + "." + lw.getSaveName() + ".material", change.toString());
+					m.getConfig().set(LobbyIcon.getConfigPrefix(lw) + "." + lw.getName() + ".material", change.toString());
 					m.saveConfig();
 					sender.sendMessage(prefix + "Changed material for icon \"" + lw.getName() + "\" to "
 							+ change.toString() + ".");
@@ -992,7 +992,7 @@ public class LobbyCommands implements CommandExecutor, TabCompleter {
 					}
 					lw.setDisplayName(ChatColor.translateAlternateColorCodes('&', sb.toString()));
 					sender.sendMessage(prefix + " Changing the worlds displayname to \"" + sb.toString() + "\"");
-					m.getConfig().set(LobbyIcon.getConfigPrefix(lw) + "." + lw.getSaveName() + ".displayname", lw.getDisplayName());
+					m.getConfig().set(LobbyIcon.getConfigPrefix(lw) + "." + lw.getName() + ".displayname", lw.getDisplayName());
 					m.saveConfig();
 				} else {
 					sender.sendMessage(prefix + " Usage: /lobbyAPI setDisplayName [World] [Displayname]");

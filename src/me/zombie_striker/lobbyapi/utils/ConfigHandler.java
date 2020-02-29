@@ -133,7 +133,7 @@ public class ConfigHandler {
 				"Linked_nether"), TELEPORTTOSPAWN("Enable_Teleport_To_Spawn_If_Same_World"),LINKED_END(
 				"Linked_End"), WORLDENVIROMENT(
 				"World_Enviroment"), PORTALLIST(
-				"Portal_Loc_List");
+				"Portal_Loc_List"),WorldDifficulty("difficulty");
 
 		private String s;
 

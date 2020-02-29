@@ -909,8 +909,8 @@ public class LobbyAPI {
 	public static List<String> getSaveNames() {
 		List<String> savenames = new ArrayList<String>();
 		for (LobbyWorld wo : LobbyWorld.getLobbyWorlds()) {
-			if (!savenames.contains(wo.getSaveName()))
-				savenames.add(wo.getSaveName());
+			if (!savenames.contains(wo.getInventorySaveName()))
+				savenames.add(wo.getInventorySaveName());
 		}
 		return savenames;
 	}
@@ -925,7 +925,7 @@ public class LobbyAPI {
 	public static List<LobbyWorld> getWorldsBySaveNameAsLobby(String savename) {
 		List<LobbyWorld> worlds = new ArrayList<LobbyWorld>();
 		for (LobbyWorld wo : LobbyWorld.getLobbyWorlds()) {
-			if (wo.getSaveName().equals(savename)) {
+			if (wo.getInventorySaveName().equals(savename)) {
 				worlds.add(wo);
 			}
 		}
@@ -942,7 +942,7 @@ public class LobbyAPI {
 	public static List<World> getWorldsBySaveName(String savename) {
 		List<World> worlds = new ArrayList<World>();
 		for (LobbyWorld wo : LobbyWorld.getLobbyWorlds()) {
-			if (wo.getSaveName().equals(savename)) {
+			if (wo.getInventorySaveName().equals(savename)) {
 				worlds.add(Bukkit.getWorld(wo.getWorldName()));
 			}
 		}

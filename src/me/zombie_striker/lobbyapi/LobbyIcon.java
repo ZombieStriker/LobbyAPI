@@ -111,11 +111,11 @@ public class LobbyIcon {
 	}
 
 
-	public String getSaveName() {
+	public String getInventorySaveName() {
 		return saveName;
 	}
 
-	public void setSaveName(String savename) {
+	public void setInventorySaveName(String savename) {
 		this.saveName = savename;
 	}
 

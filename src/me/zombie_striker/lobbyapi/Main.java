@@ -254,6 +254,17 @@ public class Main extends JavaPlugin implements Listener {
 	}
 
 	public void onDisable() {
+		//Check if any of the world difficulties have changed.
+		boolean save = false;
+		for(LobbyWorld lw : LobbyAPI.getWorlds()){
+			if(lw.getWorld().getDifficulty() != lw.getWorldDifficulty()){
+				lw.setWorldDifficulty(lw.getWorld().getDifficulty());
+				getConfig().set("Worlds." + lw.getName() + "."+ ConfigKeys.WorldDifficulty, lw.getWorld().getDifficulty().name());
+				save = true;
+			}
+		}
+		if(save)
+			saveConfig();
 	}
 
 	public void setInventorySize(boolean isOp) {
@@ -504,7 +515,7 @@ public class Main extends JavaPlugin implements Listener {
 
 		if (lw != null) {
 			if (enablePWI)
-				if (lwFrom == null || (!lwFrom.getSaveName().equals(lw.getSaveName())))
+				if (lwFrom == null || (!lwFrom.getInventorySaveName().equals(lw.getInventorySaveName())))
 					clearInventory(p);
 		}
 
@@ -512,12 +523,12 @@ public class Main extends JavaPlugin implements Listener {
 		new BukkitRunnable() {
 			public void run() {
 				LobbyWorld lwTo = LobbyAPI.getLobbyWorld(p.getWorld());
-				if (lwFrom == null || (!lwFrom.getSaveName().equals(lwTo.getSaveName()))) {
+				if (lwFrom == null || (!lwFrom.getInventorySaveName().equals(lwTo.getInventorySaveName()))) {
 					if (lwTo != null) {
 						if (enablePWI) {
 							loadInventory(p, lwTo);
 						}
-						if (lwTo.getGameMode() != null && !lwTo.getSaveName().equals(lwFrom.getSaveName()))
+						if (lwTo.getGameMode() != null && !lwTo.getInventorySaveName().equals(lwFrom.getInventorySaveName()))
 							p.setGameMode(lwTo.getGameMode());
 
 						if (lwTo.getSpawnItems() != null && lwTo.getSpawnItems().size() > 0)
@@ -735,7 +746,7 @@ public class Main extends JavaPlugin implements Listener {
 			Bukkit.getConsoleSender().sendMessage(prefix + "Inventory is null");
 			return;
 		}
-		String s = lw.getSaveName();
+		String s = lw.getInventorySaveName();
 		File tempHolder = new File(getDataFolder() + File.separator + "playerfiles",
 				p.getUniqueId().toString() + ".yml");
 		FileConfiguration config = getConfig();
@@ -891,7 +902,7 @@ public class Main extends JavaPlugin implements Listener {
 					e1.printStackTrace();
 				}
 			FileConfiguration config = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(tempHolder);
-			Location loc = (Location) config.get(p.getName() + "." + lw.getSaveName() + ".LastLocation");
+			Location loc = (Location) config.get(p.getName() + "." + lw.getInventorySaveName() + ".LastLocation");
 			return loc;
 		}
 		return null;
@@ -930,7 +941,7 @@ public class Main extends JavaPlugin implements Listener {
 					}
 				FileConfiguration config = org.bukkit.configuration.file.YamlConfiguration
 						.loadConfiguration(tempHolder);
-				config.set(p.getName() + "." + lw.getSaveName() + ".LastLocation", newLoc);
+				config.set(p.getName() + "." + lw.getInventorySaveName() + ".LastLocation", newLoc);
 				try {
 					config.save(tempHolder);
 				} catch (IOException e) {
@@ -948,7 +959,7 @@ public class Main extends JavaPlugin implements Listener {
 					+ " The world you are in is not registered by LobbyAPI. Contact the server owner or OP and show them this message.");
 			return;
 		}
-		String world2 = lw.getSaveName();
+		String world2 = lw.getInventorySaveName();
 		File tempHolder = new File(getDataFolder() + File.separator + "playerfiles",
 				p.getUniqueId().toString() + ".yml");
 		if (!tempHolder.getParentFile().exists())
@@ -981,7 +992,7 @@ public class Main extends JavaPlugin implements Listener {
 					+ " The world you are in is not registered by LobbyAPI. Contact the server owner or OP and show them this message.");
 			return p.getEnderChest();
 		}
-		String world2 = lw.getSaveName();
+		String world2 = lw.getInventorySaveName();
 		File tempHolder = new File(getDataFolder() + File.separator + "playerfiles",
 				p.getUniqueId().toString() + ".yml");
 		if (!tempHolder.getParentFile().exists())
@@ -1022,7 +1033,7 @@ public class Main extends JavaPlugin implements Listener {
 	}
 
 	private void saveInventory(Player p, LobbyWorld lw) {
-		String world2 = lw.getSaveName();
+		String world2 = lw.getInventorySaveName();
 		File tempHolder = new File(getDataFolder() + File.separator + "playerfiles",
 				p.getUniqueId().toString() + ".yml");
 		if (!tempHolder.getParentFile().exists())
@@ -1291,6 +1302,12 @@ public class Main extends JavaPlugin implements Listener {
 						lw.setEnd(end);
 					}
 
+					if(ConfigHandler.containsWorldVariable(lw,ConfigKeys.WorldDifficulty)){
+						lw.setWorldDifficulty(Difficulty.valueOf(ConfigHandler.getWorldVariableString(lw,ConfigKeys.WorldDifficulty)));
+						lw.getWorld().setDifficulty(lw.getWorldDifficulty());
+						if(lw.getNether()!=null)lw.getNether().setDifficulty(lw.getWorldDifficulty());
+						if(lw.getEnd()!=null)lw.getEnd().setDifficulty(lw.getWorldDifficulty());
+					}
 
 					if (getConfig().contains("Worlds." + key + ".weatherstate")) {
 						WeatherState ws = WeatherState.getWeatherStateByName(
@@ -1313,6 +1330,7 @@ public class Main extends JavaPlugin implements Listener {
 
 					boolean portal = getConfig().contains("Worlds." + key + ".canuseportals") && getConfig().getBoolean("Worlds." + key + ".canuseportals");
 					lw.setPortal(portal);
+
 
 					if (getConfig().contains("Worlds." + key + ".connectedTo")) {
 						getConfig().set("Worlds." + key + ".respawnWorld",

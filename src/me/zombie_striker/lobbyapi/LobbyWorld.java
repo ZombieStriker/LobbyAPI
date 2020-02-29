@@ -50,12 +50,14 @@ public class LobbyWorld extends LobbyIcon {
 	private List<String> worldDescription = new ArrayList<String>();
 	private boolean isLobby = false;
 
+	private Difficulty worldDifficulty;
+
 	public LobbyWorld(boolean loadedFC, String worldname, int ID, int amount, short color, Location spawn,
 					  String saveName, GameMode gm) {
 		super(loadedFC, worldname, ID, amount, color);
 		this.mainWorld = Bukkit.getWorld(worldname.toLowerCase());
 		this.spawn = spawn;
-		setSaveName(saveName);
+		setInventorySaveName(saveName);
 		this.gamemode = gm;
 	}
 
@@ -124,6 +126,13 @@ public class LobbyWorld extends LobbyIcon {
 	 */
 	public boolean shouldWorldShouldSavePlayerLocation() {
 		return this.shouldSavePlayerLocation;
+	}
+
+	public Difficulty getWorldDifficulty(){
+		return worldDifficulty;
+	}
+	public void setWorldDifficulty(Difficulty difficulty){
+		this.worldDifficulty = difficulty;
 	}
 
 	/**

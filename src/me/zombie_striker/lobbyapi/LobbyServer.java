@@ -32,7 +32,7 @@ public class LobbyServer extends LobbyIcon {
 	}
 
 	@Override
-	public String getSaveName() {
+	public String getInventorySaveName() {
 		return getName();
 	}
 }

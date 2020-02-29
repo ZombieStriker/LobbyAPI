@@ -1,3 +1,7 @@
+3.7.104
+    Added persistent World Difficulties across reloads.
+    Fixed savename/Worldname issue
+
 3.7.103
     Changed /lobbyapi changeSpawn to /lobbyapi setSpawn.
     Added Buttons to the menu. Buttons can issue commands as the player when clicked.
